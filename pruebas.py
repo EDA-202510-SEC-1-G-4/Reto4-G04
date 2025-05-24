@@ -1,30 +1,44 @@
+from DataStructures.Map import map_linear_probing as mp
+from DataStructures.Graph import bfs
 from DataStructures.Graph import digraph as G
- 
-# Crea un grafo vacío
-my_graph = G.new_graph(1)
+from DataStructures.Graph import vertex as V
+from DataStructures.Stack import stack as s
 
-# Inserta vértices
-my_graph = G.insert_vertex(my_graph, "Tunja", {"nombre": "Tunja", "poblacion": 200000})
-my_graph = G.insert_vertex(my_graph, "Villavicencio", {"nombre": "Villavicencio", "poblacion": 300000})
-my_graph = G.insert_vertex(my_graph, "Neiva", {"nombre": "Neiva", "poblacion": 350000})
+# Crear grafo vacío
+grafo = G.new_graph(10)
 
-# Inserta arcos
-my_graph = G.add_edge(my_graph, "Tunja", "Villavicencio", 150)
-my_graph = G.add_edge(my_graph, "Tunja", "Neiva", 180)
+# Crear vértices con key y value
+v1 = V.new_vertex(1, {"name": 1})
+v2 = V.new_vertex(2, {"name": 2})
+v3 = V.new_vertex(3, {"name": 3})
 
-# Consulta de adyacencias
-adj = G.adjacents(my_graph, "Tunja")
-print(adj)
-# Salida esperada: ['Villavicencio', 'Neiva']
+# Insertar vértices al grafo
+mp.put(grafo['vertices'], 1, v1)
+mp.put(grafo['vertices'], 2, v2)
+mp.put(grafo['vertices'], 3, v3)
 
-# Consulta de adyacencias para un vértice sin conexiones
-dj = G.adjacents(my_graph, "Neiva")
-print(adj)
-# Salida esperada: []
+# Conectar adyacencias
+mp.put(v1["adjacents"], 2, {"to": 2, "weight": 1})
+mp.put(v2["adjacents"], 3, {"to": 3, "weight": 1})
 
-# Consulta de adyacencias para un vértice inexistente
-try:
-    adj = G.adjacents(my_graph, "Popayan")
-except Exception as e:
-    print(e)
-# Salida esperada: El vertice no existe
+# Ejecutar BFS desde 1
+search = bfs.bfs(grafo, 1)
+
+# Mostrar vértices visitados
+print("Visitados:")
+for i in range(mp.size(search["visited"])):
+    key = mp.get(mp.key_set(search["visited"]), i)["value"]
+    print("-", key)
+
+# Mostrar predecesores
+print("Predecesores:")
+for i in range(mp.size(search["edgeTo"])):
+    key = mp.get(mp.key_set(search["edgeTo"]), i)["value"]
+    pred = mp.get(search["edgeTo"], key)["value"]
+    print(f"{key} <- {pred}")
+
+# Mostrar camino de 1 a 3
+print("Camino de 1 a 3:")
+path = bfs.path_to(3, search)
+while not s.is_empty(path):
+    print(s.pop(path))
