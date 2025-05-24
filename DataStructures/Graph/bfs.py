@@ -56,18 +56,18 @@ def bfs_vertex(my_graph, search):
                 q.enqueue(queue, key)
             
 
-def has_path_to(vertex, search):
+def has_path_to(search, vertex):
     """
     Retorna True si hay camino desde search['source'] hasta vertex.
     """
     return mp.contains(search['visited'], vertex)
 
-def path_to(vertex, search):
+def path_to(search, vertex):
     """
     Retorna una pila con el camino desde source hasta vertex.
     Si no existe camino, retorna None.
     """
-    if not has_path_to(vertex, search):
+    if not has_path_to(search, vertex):
         return None
 
     path = s.new_stack()
@@ -75,7 +75,7 @@ def path_to(vertex, search):
 
     while current != search['source']:
         s.push(path, current)
-        current = mp.get(search['visited'], current)['value']['edge_to']
+        current = mp.get(search['visited'], current)['edge_to']
 
     s.push(path, search['source'])
     return path
