@@ -65,7 +65,7 @@ def path_to(search, vertex):
 
     while current != search['source']:
         s.push(path, current)
-        current = mp.get(search['visited'], current)['value']['edge_to']
+        current = mp.get(search['visited'], current)['edge_to']
 
     s.push(path, search['source'])
     return path

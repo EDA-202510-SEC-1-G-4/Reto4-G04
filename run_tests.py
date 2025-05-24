@@ -41,7 +41,7 @@ def execute_list_tests(input_option="2"):
     for test_name in tests_names:
         execute_pytest_test(test_name)
         
-def execute_graphs_tests(input_option="11"):
+def execute_graphs_tests():
     """Ejecuta pruebas relacionadas con Recorrido en grafos"""
     tests_names = []
     
