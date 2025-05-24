@@ -45,21 +45,16 @@ def bfs_vertex(my_graph, search):
         adj_map = entry["adjacents"]
         adj_keys = mp.key_set(adj_map)
         print(adj_keys)
-        print(adj_map)
-        print()
-        for key in adj_keys["elements"]:
-            adj = mp.get(adj_map, key)
-            print(f"adyacente: {adj}")
-            print(mp.contains(visited, adj))
-            if not mp.contains(visited, adj):
-                mp.put(visited, adj, {
+        
+        for key in adj_keys["elements"]:  # key es el nombre del vértice, como "Bogotá"
+            if not mp.contains(visited, key):
+                mp.put(visited, key, {
                     "marked": True,
                     "edge_to": current,
                     "dist_to": current_dist + 1
                 })
-                q.enqueue(queue, adj)
-            print()
-            print(visited)
+                q.enqueue(queue, key)
+            
 
 def has_path_to(vertex, search):
     """
