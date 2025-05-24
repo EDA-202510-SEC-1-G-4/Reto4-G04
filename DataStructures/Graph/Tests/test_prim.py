@@ -1,5 +1,5 @@
-from DataStructures.Graph import adj_list_graph as gl
-from DataStructures.Graph import prim as prim
+from DataStructures.Graph import digraph as gl
+from DataStructures.Graph import prim_structure as prim
 from DataStructures.Graph import edge as ed
 from DataStructures.Map import map_linear_probing as map
 from DataStructures.Stack import stack as st

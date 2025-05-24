@@ -1,4 +1,4 @@
-from DataStructures.Graph import adj_list_graph as g
+from DataStructures.Graph import digraph as g
 from DataStructures.Graph import dfo as dfo
 from DataStructures.Map import map_linear_probing as map
 from DataStructures.Stack import stack as stk
