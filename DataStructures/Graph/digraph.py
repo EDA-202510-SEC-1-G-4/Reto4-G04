@@ -3,9 +3,10 @@ from DataStructures.Graph import vertex
 from DataStructures.Map import map_linear_probing as mp
 from DataStructures.List import array_list as al
 
-def new_graph(order=0):
+def new_graph(order=0,duro=True):
     graph = {'vertices':mp.new_map(order),
              'num_edges':0}
+    
     return graph
 
 def insert_vertex(graph,key,info):
