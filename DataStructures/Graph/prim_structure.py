@@ -25,6 +25,7 @@ def new_prim_structure(source, g_order):
         "dist_to": map.new_map(g_order, 0.5),
         "marked": map.new_map(g_order, 0.5),
         "pq":  pq.new_heap(),
+        "mst": None
     }
 
     return structure
