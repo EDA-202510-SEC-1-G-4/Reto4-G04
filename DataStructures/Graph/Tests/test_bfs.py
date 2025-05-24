@@ -40,7 +40,7 @@ def setup_tests():
 @handle_not_implemented
 def test_breath_first_search():
     my_graph, n = setup_tests()
-    new_bfs = bfs.breath_first_search(my_graph, 1)
+    new_bfs = bfs.bfs(my_graph, 1)
     assert new_bfs["source"] == 1
     assert new_bfs["visited"] is not None
     assert map.get(new_bfs["visited"], 1) == {
@@ -93,11 +93,11 @@ def test_breath_first_search():
 @handle_not_implemented
 def test_has_path_to():
     my_graph, no_conected = setup_tests()
-    new_bfs = bfs.breath_first_search(my_graph, 1)
+    new_bfs = bfs.bfs(my_graph, 1)
     for i in range(1, 10):
         assert bfs.has_path_to(new_bfs, i) is True
 
-    new_bfs = bfs.breath_first_search(no_conected, 1)
+    new_bfs = bfs.bfs(no_conected, 1)
     assert bfs.has_path_to(new_bfs, 1) is True
     assert bfs.has_path_to(new_bfs, 2) is True
     assert bfs.has_path_to(new_bfs, 3) is True
@@ -108,7 +108,7 @@ def test_has_path_to():
 @handle_not_implemented
 def test_path_to():
     my_graph, no_conected = setup_tests()
-    new_bfs = bfs.breath_first_search(my_graph, 1)
+    new_bfs = bfs.bfs(my_graph, 1)
 
     path = bfs.path_to(new_bfs, 3)
     assert path is not None

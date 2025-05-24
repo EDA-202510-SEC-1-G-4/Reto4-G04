@@ -46,7 +46,7 @@ def setup_tests():
 @handle_not_implemented
 def test_depth_first_order():
     my_graph = setup_tests()
-    new_dfo = dfo.depth_first_order(my_graph)
+    new_dfo = dfo.dfo(my_graph)
 
     assert new_dfo["marked"] is not None
     assert new_dfo["pre"] is not None

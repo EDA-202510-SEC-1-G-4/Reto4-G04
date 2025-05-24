@@ -20,6 +20,7 @@ def print_test_options():
     print("8. Árboles binarios de búsqueda")
     print("9. Árboles rojo negro")
     print("10. Grafos")
+    print("11. Recorridos en Grafos (DFS,BFS,DFO...)")
     print("0. Salir")
 
 
@@ -37,6 +38,19 @@ def execute_list_tests(input_option="2"):
         tests_names.append("test_array_list")
     if input_option.lower() == "2.b" or input_option == "2":
         tests_names.append("test_single_linked_list")
+    for test_name in tests_names:
+        execute_pytest_test(test_name)
+        
+def execute_graphs_tests(input_option="11"):
+    """Ejecuta pruebas relacionadas con Recorrido en grafos"""
+    tests_names = []
+    
+    tests_names.append("test_bfs")
+    tests_names.append("test_dfs")
+    tests_names.append("test_dfo")
+    tests_names.append("test_dijsktra")
+    tests_names.append("test_prim")
+    
     for test_name in tests_names:
         execute_pytest_test(test_name)
 
@@ -126,6 +140,9 @@ if __name__ == "__main__":
         runned = True
     if input_option == "10":
         execute_graph_tests()
+        runned = True
+    if input_option == "11":
+        execute_graphs_tests()
         runned = True
     if input_option == "0":
         print("Saliendo de las pruebas")

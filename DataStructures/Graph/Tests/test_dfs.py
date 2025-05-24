@@ -40,7 +40,7 @@ def setup_tests():
 @handle_not_implemented
 def test_depth_first_search():
     my_graph, n = setup_tests()
-    new_dfs = dfs.depth_first_search(my_graph, 1)
+    new_dfs = dfs.dfs(my_graph, 1)
     assert new_dfs["source"] == 1
     assert new_dfs["visited"] is not None
     assert map.get(new_dfs["visited"], 1) == {"marked": True, "edge_to": None}
@@ -57,11 +57,11 @@ def test_depth_first_search():
 @handle_not_implemented
 def test_has_path_to():
     my_graph, no_conected = setup_tests()
-    new_dfs = dfs.depth_first_search(my_graph, 1)
+    new_dfs = dfs.dfs(my_graph, 1)
     for i in range(1, 10):
         assert dfs.has_path_to(new_dfs, i) is True
 
-    new_dfs = dfs.depth_first_search(no_conected, 1)
+    new_dfs = dfs.dfs(no_conected, 1)
     assert dfs.has_path_to(new_dfs, 1) is True
     assert dfs.has_path_to(new_dfs, 2) is True
     assert dfs.has_path_to(new_dfs, 3) is True
@@ -72,7 +72,7 @@ def test_has_path_to():
 @handle_not_implemented
 def test_path_to():
     my_graph, no_conected = setup_tests()
-    new_dfs = dfs.depth_first_search(my_graph, 1)
+    new_dfs = dfs.dfs(my_graph, 1)
     path = dfs.path_to(new_dfs, 2)
 
     assert path is not None
