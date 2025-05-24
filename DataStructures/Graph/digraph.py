@@ -37,14 +37,17 @@ def add_edge(graph, key_u, key_v, weight=1.0):#ncastano que hizo
     if not mp.contains(graph['vertices'], key_v):
         raise Exception("El vertice no existe")
 
-    existe = mp.contains(mp.get(graph['vertices'], key_u)['adjacents'], key_v)
-    e = edge.new_edge(key_v, weight)
-    
-    mp.put(mp.get(graph['vertices'], key_u)['adjacents'], key_v, e)
-    
+    vert_u = mp.get(graph['vertices'], key_u)
+    if isinstance(vert_u, tuple):  # Protección extra
+        vert_u = vert_u[1]
+
+    existe = mp.contains(vert_u['adjacents'], key_v)
+
+    mp.put(vert_u['adjacents'], key_v, edge.new_edge(key_v, weight))
+
     if not existe:
         graph['num_edges'] += 1
-    
+
     return graph
 
 def order(graph): #tranca
