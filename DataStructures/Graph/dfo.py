@@ -1,30 +1,41 @@
 from DataStructures.List import array_list as al
 from DataStructures.Map import map_linear_probing as mp
+from DataStructures.Queue import queue as q
 from DataStructures.Stack import stack as s
 from DataStructures.Graph import digraph as G
+from DataStructures.Graph import dfo_structure as dfos
 
-def dfo(graph):
-    # Inicializar estructura de búsqueda para el recorrido DFO
-    dfo_search = mp.new_map(G.order(graph))  
-    stack = s.new_stack()
+def dfo(my_graph):
+    """
+    Inicia un recorrido Depth First Order (DFO) sobre el grafo.
+    Retorna una estructura de búsqueda para determinar el orden de los vértices.
+    """
+    order = G.order(my_graph)
+    search = dfos.new_dfo_structure(order)
+    vertices = G.vertices(my_graph)  # array_list
 
-    # Obtener todos los vértices del grafo
-    vertices_list = G.vertices(graph)['elements']
+    for v in vertices["elements"]:
+        if not mp.contains(search['marked'], v):
+            dfs_vertex(my_graph, v, search)
 
-    for vertex in vertices_list:
-        if not mp.contains(dfo_search, vertex):
-            dfs_vertex(graph, vertex, dfo_search, stack)  
+    return search
 
-    return dfo_search
+def dfs_vertex(my_graph, vertex, search):
+    """
+    Función recursiva que aplica DFS actualizando pre, post y reversepost.
+    """
+    q.enqueue(search['pre'], vertex)
+    mp.put(search['marked'], vertex, True)
 
-def dfs_vertex(graph, key, dfo_search, stack):
-    # Registrar el nodo como visitado
-    mp.put(dfo_search, key, {"marked": True})
-    s.push(stack, key)
+    entry = mp.get(my_graph['vertices'], vertex)
+    adj_map = entry['adjacents']
+    adj_keys = mp.key_set(adj_map)
 
-    adj = G.adjacents(graph, key)["elements"]
-    for neighbor in adj:
-        if not mp.contains(dfo_search, neighbor):
-            dfs_vertex(graph, neighbor, dfo_search, stack)
+    for adj in adj_keys["elements"]:
+        if not mp.contains(search['marked'], adj):
+            dfs_vertex(my_graph, adj, search)
 
-    s.pop(stack)
+    q.enqueue(search['post'], vertex)
+    s.push(search['reversepost'], vertex)
+
+    return search
