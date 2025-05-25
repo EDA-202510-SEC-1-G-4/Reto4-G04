@@ -37,9 +37,15 @@ def dfs_vertex(my_graph, vertex, search):
 
     adj_map = entry["adjacents"]
     adj_keys = mp.key_set(adj_map)
-
-    for key in adj_keys["elements"]:
+    cmp_func = al.default_sort_criteria
+    keys = al.merge_sort(adj_keys,cmp_func)
+    #print(f"lista ordenada: {keys["elements"]}")
+    for key in (keys["elements"]):
+        #print()
+        #print(f"llave a insertar: {key}")
         if not mp.contains(visited, key):
+            #print(f"el vertice edge_to es: {vertex}")
+            #print(f"insertando la llave: {key}")
             mp.put(visited, key, {
                 "marked": True,
                 "edge_to": vertex

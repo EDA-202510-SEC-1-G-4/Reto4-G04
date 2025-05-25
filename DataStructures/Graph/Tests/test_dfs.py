@@ -46,12 +46,12 @@ def test_depth_first_search():
     assert map.get(new_dfs["visited"], 1) == {"marked": True, "edge_to": None}
     assert map.get(new_dfs["visited"], 2) == {"marked": True, "edge_to": 1}
     assert map.get(new_dfs["visited"], 3) == {"marked": True, "edge_to": 2}
-    assert map.get(new_dfs["visited"], 4) == {"marked": True, "edge_to": 7}
-    assert map.get(new_dfs["visited"], 5) == {"marked": True, "edge_to": 6}
+    assert map.get(new_dfs["visited"], 4) == {"marked": True, "edge_to": 1}
+    assert map.get(new_dfs["visited"], 5) == {"marked": True, "edge_to": 2}
     assert map.get(new_dfs["visited"], 6) == {"marked": True, "edge_to": 3}
     assert map.get(new_dfs["visited"], 7) == {"marked": True, "edge_to": 5}
     assert map.get(new_dfs["visited"], 8) == {"marked": True, "edge_to": 7}
-    assert map.get(new_dfs["visited"], 9) == {"marked": True, "edge_to": 8}
+    assert map.get(new_dfs["visited"], 9) == {"marked": True, "edge_to": 6}
 
 
 @handle_not_implemented
@@ -89,23 +89,17 @@ def test_path_to():
 
     path = dfs.path_to(new_dfs, 4)
     assert path is not None
-    assert stk.size(path) == 7
+    assert stk.size(path) == 2
     assert stk.pop(path) == 1
-    assert stk.pop(path) == 2
-    assert stk.pop(path) == 3
-    assert stk.pop(path) == 6
-    assert stk.pop(path) == 5
-    assert stk.pop(path) == 7
     assert stk.pop(path) == 4
+
 
     path = dfs.path_to(new_dfs, 9)
     assert path is not None
-    assert stk.size(path) == 8
+    assert stk.size(path) == 5
     assert stk.pop(path) == 1
     assert stk.pop(path) == 2
     assert stk.pop(path) == 3
     assert stk.pop(path) == 6
-    assert stk.pop(path) == 5
-    assert stk.pop(path) == 7
-    assert stk.pop(path) == 8
     assert stk.pop(path) == 9
+   

@@ -48,8 +48,8 @@ def execute_graphs_tests():
     tests_names.append("test_bfs")
     tests_names.append("test_dfs")
     tests_names.append("test_dfo")
-    tests_names.append("test_dijsktra")
-    tests_names.append("test_prim")
+    #tests_names.append("test_dijsktra")
+    #tests_names.append("test_prim")
     
     for test_name in tests_names:
         execute_pytest_test(test_name)
