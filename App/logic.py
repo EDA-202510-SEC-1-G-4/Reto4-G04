@@ -1,22 +1,51 @@
 import time
+import csv
+import time
+from DataStructures.Graph import digraph as G
+from DataStructures.Map import map_linear_probing as mp
+from DataStructures.List import array_list as al
 
 def new_logic():
     """
     Crea el catalogo para almacenar las estructuras de datos
     """
     #TODO: Llama a las funciónes de creación de las estructuras de datos
-    pass
+    catalog = {
+        'graph': G.new_graph(),
+        'delivery_persons': mp.new_map(100),  # Para almacenar información de domiciliarios
+        'deliveries_count': 0,                # Contador de domicilios procesados
+        'last_delivery': mp.new_map(100),     # Para rastrear último destino por domiciliario
+        'restaurants': mp.new_map(100),       # Para contar restaurantes únicos
+        'delivery_locations': mp.new_map(100) # Para contar ubicaciones de entrega únicas
+    }
+    return catalog
 
 
 # Funciones para la carga de datos
+def format_coordinate(coord):
+    """
+    Formatea una coordenada (latitud o longitud) a 4 decimales
+    """
+    try:
+        return "{0:.4f}".format(float(coord))
+    except:
+        return "0.0000"
+
+def create_node_id(lat, lon):
+    """
+    Crea un ID de nodo en formato "<Latitud>_<Longitud>" con 4 decimales
+    """
+    lat_formatted = format_coordinate(lat)
+    lon_formatted = format_coordinate(lon)
+    return f"{lat_formatted}_{lon_formatted}"
+
 
 def load_data(catalog, filename):
     """
     Carga los datos del reto
     """
     # TODO: Realizar la carga de datos
-    pass
-
+    
 # Funciones de consulta sobre el catálogo
 
 def get_data(catalog, id):
