@@ -50,113 +50,105 @@ def load_data(catalog, filename):
     # Inicializar estructuras para estadísticas
     total_time = 0
     delivery_person_set = set()
-    
-    with open(filename, 'r', encoding='utf-8') as csvfile:
-        reader = csv.DictReader(csvfile)
+    csvfile = open(filename,'r',encoding='utf-8')
+    reader = csv.DictReader(csvfile)
         
-        for row in reader:
-            try:
-                # Procesar cada fila del CSV
-                catalog['deliveries_count'] += 1
+    for row in reader:
+        # Procesar cada fila del CSV
+        catalog['deliveries_count'] += 1
                 
-                # Obtener datos del domiciliario
-                delivery_person_id = row['Delivery_person_ID']
-                delivery_person_set.add(delivery_person_id)
+        # Obtener datos del domiciliario
+        delivery_person_id = row['Delivery_person_ID']
+        delivery_person_set.add(delivery_person_id)
                 
-                # Crear IDs de nodos para origen y destino
-                rest_lat = row['Restaurant_latitude']
-                rest_lon = row['Restaurant_longitude']
-                deliv_lat = row['Delivery_location_latitude']
-                deliv_lon = row['Delivery_location_longitude']
+        # Crear IDs de nodos para origen y destino
+        rest_lat = row['Restaurant_latitude']
+        rest_lon = row['Restaurant_longitude']
+        deliv_lat = row['Delivery_location_latitude']
+        deliv_lon = row['Delivery_location_longitude']
                 
-                origin_id = create_node_id(rest_lat, rest_lon)
-                dest_id = create_node_id(deliv_lat, deliv_lon)
+        origin_id = create_node_id(rest_lat, rest_lon)
+        dest_id = create_node_id(deliv_lat, deliv_lon)
                 
-                # Obtener tiempo de entrega
-                time_taken = float(row['Time_taken(min)'])
-                total_time += time_taken
+         # Obtener tiempo de entrega
+        time_taken = float(row['Time_taken(min)'])
+        total_time += time_taken
                 
-                # Agregar restaurante a la lista de restaurantes únicos
-                if not mp.contains(catalog['restaurants'], origin_id):
-                    mp.put(catalog['restaurants'], origin_id, True)
+        # Agregar restaurante a la lista de restaurantes únicos
+        if not mp.contains(catalog['restaurants'], origin_id):
+            mp.put(catalog['restaurants'], origin_id, True)
                 
-                # Agregar ubicación de entrega a la lista de ubicaciones únicas
-                if not mp.contains(catalog['delivery_locations'], dest_id):
-                    mp.put(catalog['delivery_locations'], dest_id, True)
+        # Agregar ubicación de entrega a la lista de ubicaciones únicas
+        if not mp.contains(catalog['delivery_locations'], dest_id):
+            mp.put(catalog['delivery_locations'], dest_id, True)
                 
-                # Crear nodos si no existen
-                if not G.contains_vertex(catalog['graph'], origin_id):
-                    G.insert_vertex(catalog['graph'], origin_id, {
-                        'type': 'restaurant',
-                        'delivery_persons': set()
-                    })
+        # Crear nodos si no existen
+        if not G.contains_vertex(catalog['graph'], origin_id):
+            G.insert_vertex(catalog['graph'], origin_id, {
+                'type': 'restaurant',
+                'delivery_persons': set()})
                 
-                if not G.contains_vertex(catalog['graph'], dest_id):
-                    G.insert_vertex(catalog['graph'], dest_id, {
-                        'type': 'delivery_location',
-                        'delivery_persons': set()
-                    })
+        if not G.contains_vertex(catalog['graph'], dest_id):
+            G.insert_vertex(catalog['graph'], dest_id, {
+                'type': 'delivery_location',
+                'delivery_persons': set()})
                 
-                # Agregar domiciliario a los nodos
-                origin_vertex = G.get_vertex(catalog['graph'], origin_id)
-                origin_vertex['value']['delivery_persons'].add(delivery_person_id)
+        # Agregar domiciliario a los nodos
+        origin_vertex = G.get_vertex(catalog['graph'], origin_id)
+        origin_vertex['value']['delivery_persons'].add(delivery_person_id)
                 
-                dest_vertex = G.get_vertex(catalog['graph'], dest_id)
-                dest_vertex['value']['delivery_persons'].add(delivery_person_id)
+        dest_vertex = G.get_vertex(catalog['graph'], dest_id)
+        dest_vertex['value']['delivery_persons'].add(delivery_person_id)
                 
-                # Agregar arco entre origen y destino (no dirigido)
-                # Verificar si ya existe un arco entre estos nodos
-                edge_origin = mp.contains(origin_vertex['adjacents'], dest_id)
-                edge_dest = mp.contains(dest_vertex['adjacents'], origin_id)
+        # Agregar arco entre origen y destino (no dirigido)
+        # Verificar si ya existe un arco entre estos nodos
+        edge_origin = mp.contains(origin_vertex['adjacents'], dest_id)
+        edge_dest = mp.contains(dest_vertex['adjacents'], origin_id)
                 
-                if edge_origin:
-                    # Si ya existe, calcular nuevo peso como promedio
-                    edge_origin = mp.get(origin_vertex['adjacents'], dest_id)
-                    edge_dest = mp.get(dest_vertex['adjacents'], origin_id)
+        if edge_origin:
+            # Si ya existe, calcular nuevo peso como promedio
+            edge_origin = mp.get(origin_vertex['adjacents'], dest_id)
+            edge_dest = mp.get(dest_vertex['adjacents'], origin_id)
                     
-                    current_weight = edge_origin['weight']
+            current_weight = edge_origin['weight']
+            new_weight = (current_weight + time_taken) / 2
+                    
+            edg.set_weight(edge_origin, new_weight)
+            edg.set_weight(edge_dest, new_weight)
+        else:
+            # Si no existe, crear nuevos arcos
+            G.add_edge(catalog['graph'], origin_id, dest_id, time_taken)
+            G.add_edge(catalog['graph'], dest_id, origin_id, time_taken)
+                
+        # Agregar arco entre el destino actual y el último destino del mismo domiciliario
+        if mp.contains(catalog['last_delivery'], delivery_person_id):
+            last_dest_id = mp.get(catalog['last_delivery'], delivery_person_id)
+                    
+            if last_dest_id != dest_id:  # Evitar autociclos
+                last_dest_vertex = G.get_vertex(catalog['graph'], last_dest_id)
+                        
+                # Verificar si ya existe un arco
+                existing_edge_last = mp.contains(dest_vertex['adjacents'], last_dest_id)
+                edge_current = mp.contains(last_dest_vertex['adjacents'], dest_id)
+                        
+                if existing_edge_last:
+                    # Calcular nuevo peso como promedio
+                    edge_last = mp.get(dest_vertex['adjacents'], last_dest_id)
+                    edge_current = mp.get(last_dest_vertex['adjacents'], dest_id)
+                            
+                    current_weight = edge_last['weight']
                     new_weight = (current_weight + time_taken) / 2
-                    
-                    edg.set_weight(edge_origin, new_weight)
-                    edg.set_weight(edge_dest, new_weight)
+                            
+                    edg.set_weight(edge_last, new_weight)
+                    edg.set_weight(edge_current, new_weight)
                 else:
-                    # Si no existe, crear nuevos arcos
-                    G.add_edge(catalog['graph'], origin_id, dest_id, time_taken)
-                    G.add_edge(catalog['graph'], dest_id, origin_id, time_taken)
+                    # Crear nuevos arcos
+                    avg_time = time_taken  # En este caso simple usamos el tiempo actual
+                    G.add_edge(catalog['graph'], dest_id, last_dest_id, avg_time)
+                    G.add_edge(catalog['graph'], last_dest_id, dest_id, avg_time)
                 
-                # Agregar arco entre el destino actual y el último destino del mismo domiciliario
-                if mp.contains(catalog['last_delivery'], delivery_person_id):
-                    last_dest_id = mp.get(catalog['last_delivery'], delivery_person_id)
-                    
-                    if last_dest_id != dest_id:  # Evitar autociclos
-                        last_dest_vertex = G.get_vertex(catalog['graph'], last_dest_id)
-                        
-                        # Verificar si ya existe un arco
-                        existing_edge_last = mp.contains(dest_vertex['adjacents'], last_dest_id)
-                        edge_current = mp.contains(last_dest_vertex['adjacents'], dest_id)
-                        
-                        if existing_edge_last:
-                            # Calcular nuevo peso como promedio
-                            edge_last = mp.get(dest_vertex['adjacents'], last_dest_id)
-                            edge_current = mp.get(last_dest_vertex['adjacents'], dest_id)
-                            
-                            current_weight = edge_last['weight']
-                            new_weight = (current_weight + time_taken) / 2
-                            
-                            edg.set_weight(edge_last, new_weight)
-                            edg.set_weight(edge_current, new_weight)
-                        else:
-                            # Crear nuevos arcos
-                            avg_time = time_taken  # En este caso simple usamos el tiempo actual
-                            G.add_edge(catalog['graph'], dest_id, last_dest_id, avg_time)
-                            G.add_edge(catalog['graph'], last_dest_id, dest_id, avg_time)
-                
-                # Actualizar último destino del domiciliario
-                mp.put(catalog['last_delivery'], delivery_person_id, dest_id)
-                
-            except Exception as e:
-                print(f"Error procesando fila: {row}. Error: {str(e)}")
-                continue
+        # Actualizar último destino del domiciliario
+        mp.put(catalog['last_delivery'], delivery_person_id, dest_id)
     
     end_time = get_time()
     
