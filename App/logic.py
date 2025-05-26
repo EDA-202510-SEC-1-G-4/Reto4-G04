@@ -1,10 +1,13 @@
 import time
 import csv
-import time
+import os
 from DataStructures.Graph import digraph as G
 from DataStructures.Map import map_linear_probing as mp
 from DataStructures.List import array_list as al
 from DataStructures.Graph import edge as edg  
+
+csv.field_size_limit(2147483647)
+data_dir = os.path.dirname(os.path.realpath('__file__')) + '/Data/'
 
 def new_logic():
     """
