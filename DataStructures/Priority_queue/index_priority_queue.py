@@ -31,7 +31,7 @@ def new_index_heap(is_min_pq=True):
         indexheap["cmp_function"] = cmp_function_higher_value
     indexheap["elements"] = lt.new_list()
     lt.add_last(indexheap["elements"], None)
-    indexheap["qp_map"] = map.new_map(num_elements=100, load_factor=0.5)
+    indexheap["qp_map"] = map.new_map(num=100, factores=0.5)
     return indexheap
 
 
