@@ -6,22 +6,6 @@ from DataStructures.Graph import digraph as G
 from DataStructures.Map import map_linear_probing as mp
 from DataStructures.Graph import edge as edg
 from App import logic as log
-
-def new_logic():
-    """
-        Se crea una instancia del controlador
-    """
-    #TODO: Llamar la función de la lógica donde se crean las estructuras de datos
-    control = {
-        'graph': G.new_graph(),
-        'delivery_persons': mp.new_map(100),
-        'deliveries_count': 0,
-        'last_delivery': mp.new_map(100),
-        'restaurants': mp.new_map(100),
-        'delivery_locations': mp.new_map(100),
-        'delivery_person_set': set()
-    }
-    return control
     
 def print_menu():
     print("Bienvenido")
@@ -167,7 +151,7 @@ def print_req_8(control):
 
 
 # Se crea la lógica asociado a la vista
-control = new_logic()
+control = log.new_logic()
 
 # main del ejercicio
 def main():
