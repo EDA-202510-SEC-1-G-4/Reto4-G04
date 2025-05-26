@@ -107,11 +107,10 @@ def get(map, key):
             if map['table']['elements'][hash]['key'] == key:
                 res = map['table']['elements'][hash]['value'] 
             else:
-                cent = True
-                while cent: 
-                    res = map['table']['elements'][hash]['value']
+                for i in range(map['table']['size']): 
                     if map['table']['elements'][hash]['key'] == key:
-                        cent = False
+                        res = map['table']['elements'][hash]['value']
+                        break
                 hash += 1
     return res
 

@@ -5,6 +5,7 @@ from tabulate import tabulate
 from DataStructures.Graph import digraph as G
 from DataStructures.Map import map_linear_probing as mp
 from DataStructures.Graph import edge as edg
+from App import logic as log
 
 def new_logic():
     """
@@ -54,180 +55,33 @@ def load_data(control):
     Carga los datos directamente desde el archivo CSV
     """
     print("\n=== CARGAR DATOS ===")
-    print("Coloque su archivo CSV en la misma carpeta que este programa")
-    print("Archivos CSV disponibles en el directorio actual:")
+    filename = "/deliverytime_min.csv"
+    start = log.get_time()
+    retorno = log.load_data(control,filename)
+    end = log.get_time()
     
     # Listar archivos CSV disponibles
-    csv_files = [f for f in os.listdir() if f.endswith('.csv')]
-    if not csv_files:
-        print("No se encontraron archivos CSV en el directorio actual")
-        return False
-    
-    for i, filename in enumerate(csv_files, 1):
-        print(f"{i}. {filename}")
-    
-    while True:
-        try:
-            selection = input("\nIngrese el número del archivo a cargar (0 para cancelar): ")
-            if selection == '0':
-                return False
-            
-            filename = csv_files[int(selection)-1]
-            break
-        except (ValueError, IndexError):
-            print("Selección inválida. Intente nuevamente.")
-    
-    start_time = get_time()
-    total_time = 0
-    
-    try:
-        with open(filename, 'r', encoding='utf-8') as csvfile:
-            reader = csv.DictReader(csvfile)
-            
-            for row in reader:
-                try:
-                    # Procesar cada fila del CSV
-                    control['deliveries_count'] += 1
-                    
-                    # Registrar domiciliario
-                    delivery_person_id = row['Delivery_person_ID']
-                    control['delivery_person_set'].add(delivery_person_id)
-                    
-                    # Crear IDs de nodos
-                    origin_id = create_node_id(
-                        row['Restaurant_latitude'], 
-                        row['Restaurant_longitude']
-                    )
-                    dest_id = create_node_id(
-                        row['Delivery_location_latitude'], 
-                        row['Delivery_location_longitude']
-                    )
-                    
-                    # Registrar tiempo
-                    time_taken = float(row['Time_taken(min)'])
-                    total_time += time_taken
-                    
-                    # Registrar restaurantes y ubicaciones únicas
-                    if not mp.contains(control['restaurants'], origin_id):
-                        mp.put(control['restaurants'], origin_id, True)
-                    
-                    if not mp.contains(control['delivery_locations'], dest_id):
-                        mp.put(control['delivery_locations'], dest_id, True)
-                    
-                    # Crear nodos si no existen
-                    if not G.contains_vertex(control['graph'], origin_id):
-                        G.insert_vertex(control['graph'], origin_id, {
-                            'type': 'restaurant',
-                            'delivery_persons': set()
-                        })
-                    
-                    if not G.contains_vertex(control['graph'], dest_id):
-                        G.insert_vertex(control['graph'], dest_id, {
-                            'type': 'delivery_location',
-                            'delivery_persons': set()
-                        })
-                    
-                    # Obtener vértices
-                    origin_vertex = G.get_vertex(control['graph'], origin_id)
-                    dest_vertex = G.get_vertex(control['graph'], dest_id)
-                    
-                    # Agregar domiciliario a los nodos
-                    origin_vertex['value']['delivery_persons'].add(delivery_person_id)
-                    dest_vertex['value']['delivery_persons'].add(delivery_person_id)
-                    
-                    # Agregar arco entre origen y destino (no dirigido)
-                    existing_edge_origin = mp.contains(origin_vertex['adjacents'], dest_id)
-                    existing_edge_dest = mp.contains(dest_vertex['adjacents'], origin_id)
-                    
-                    if existing_edge_origin:
-                        # Si ya existe, calcular nuevo peso como promedio
-                        edge_origin = mp.get(origin_vertex['adjacents'], dest_id)
-                        edge_dest = mp.get(dest_vertex['adjacents'], origin_id)
-                        
-                        current_weight = edge_origin['weight']
-                        new_weight = (current_weight + time_taken) / 2
-                        
-                        edg.set_weight(edge_origin, new_weight)
-                        edg.set_weight(edge_dest, new_weight)
-                    else:
-                        # Si no existe, crear nuevos arcos
-                        G.add_edge(control['graph'], origin_id, dest_id, time_taken)
-                        G.add_edge(control['graph'], dest_id, origin_id, time_taken)
-                    
-                    # Registrar último destino del domiciliario
-                    if mp.contains(control['last_delivery'], delivery_person_id):
-                        last_dest_id = mp.get(control['last_delivery'], delivery_person_id)
-                        
-                        if last_dest_id != dest_id:  # Evitar autociclos
-                            last_dest_vertex = G.get_vertex(control['graph'], last_dest_id)
-                            
-                            # Verificar si ya existe un arco
-                            existing_edge_last = mp.contains(dest_vertex['adjacents'], last_dest_id)
-                            existing_edge_current = mp.contains(last_dest_vertex['adjacents'], dest_id)
-                            
-                            if existing_edge_last:
-                                # Calcular nuevo peso como promedio
-                                edge_last = mp.get(dest_vertex['adjacents'], last_dest_id)
-                                edge_current = mp.get(last_dest_vertex['adjacents'], dest_id)
-                                
-                                current_weight = edge_last['weight']
-                                new_weight = (current_weight + time_taken) / 2
-                                
-                                edg.set_weight(edge_last, new_weight)
-                                edg.set_weight(edge_current, new_weight)
-                            else:
-                                # Crear nuevos arcos
-                                G.add_edge(control['graph'], dest_id, last_dest_id, time_taken)
-                                G.add_edge(control['graph'], last_dest_id, dest_id, time_taken)
-                    
-                    mp.put(control['last_delivery'], delivery_person_id, dest_id)
-                    
-                except Exception as e:
-                    print(f"Error procesando fila: {str(e)}")
-                    continue
-        
-        end_time = get_time()
-        
-        # Calcular estadísticas
-        stats = {
-            'total_deliveries': control['deliveries_count'],
-            'total_delivery_persons': len(control['delivery_person_set']),
-            'total_nodes': G.order(control['graph']),
-            'total_edges': G.size(control['graph']) // 2,  # Dividido por 2 por ser no dirigido
-            'total_restaurants': mp.size(control['restaurants']),
-            'total_delivery_locations': mp.size(control['delivery_locations']),
-            'avg_delivery_time': total_time / control['deliveries_count'] if control['deliveries_count'] > 0 else 0,
-            'execution_time': delta_time(start_time, end_time)
-        }
-        
+
         # Mostrar resultados
-        print("\n" + "="*50)
-        print("RESULTADOS DE LA CARGA DE DATOS")
-        print("="*50)
+    print("\n" + "="*50)
+    print("RESULTADOS DE LA CARGA DE DATOS")
+    print("="*50)
+    print(retorno)
+    print(log.delta_time(start,end))
         
-        stats_table = [
-            ["Domicilios procesados", stats['total_deliveries']],
-            ["Domiciliarios únicos", stats['total_delivery_persons']],
-            ["Nodos en el grafo", stats['total_nodes']],
-            ["Arcos en el grafo", stats['total_edges']],
-            ["Restaurantes únicos", stats['total_restaurants']],
-            ["Ubicaciones de entrega", stats['total_delivery_locations']],
-            ["Tiempo promedio (min)", f"{stats['avg_delivery_time']:.2f}"],
-            ["Tiempo de carga (ms)", f"{stats['execution_time']:.2f}"]
-        ]
+    # stats_table = [
+    #     ["Domicilios procesados", stats['total_deliveries']],
+    #     ["Domiciliarios únicos", stats['total_delivery_persons']],
+    #     ["Nodos en el grafo", stats['total_nodes']],
+    #     ["Arcos en el grafo", stats['total_edges']],
+    #     ["Restaurantes únicos", stats['total_restaurants']],
+    #     ["Ubicaciones de entrega", stats['total_delivery_locations']],
+    #     ["Tiempo promedio (min)", f"{stats['avg_delivery_time']:.2f}"],
+    #     ["Tiempo de carga (ms)", f"{stats['execution_time']:.2f}"]
+    # ]
         
-        print(tabulate(stats_table, headers=["Métrica", "Valor"], tablefmt="grid"))
-        print("="*50 + "\n")
-        
-        return True
-        
-    except FileNotFoundError:
-        print(f"\nERROR: Archivo '{filename}' no encontrado.")
-        print("Asegúrese que el archivo esté en el mismo directorio que este programa.\n")
-        return False
-    except Exception as e:
-        print(f"\nERROR inesperado: {str(e)}\n")
-        return False
+    # print(tabulate(stats_table, headers=["Métrica", "Valor"], tablefmt="grid"))
+    # print("="*50 + "\n")
 
 def get_time():
     """Devuelve el instante tiempo de procesamiento en milisegundos"""
