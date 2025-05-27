@@ -55,49 +55,35 @@ def find_slot(my_map, key, hash_value):
    return ocupied, first_avail
 
 def rehash(my_map):
-    capacity = int(my_map['capacity'])
-    num = mp.next_prime(capacity*2)
-    resized = new_map(num,factores=0.5,primo=1093598347)
-    elements = my_map['table']['elements']
-    for element in elements:
-        if element['key'] != None and element['value'] != None:
-            llave = element['key']
-            valor = element['value']
-            put(resized,llave,valor)
-    return resized
+    new_capacity = mp.next_prime(my_map["capacity"] * 2)
+    resized_map = new_map(new_capacity, factores=my_map["limit_factor"], primo=1093598347)
 
-def put(my_map,key,value):
-    pos = int(mp.hash_value(my_map,key)%my_map['table']['size'])
-    pos_key = my_map['table']['elements'][pos]['key']
-    if pos_key == None or pos_key == "__EMPTY__":
-        al.change_info(my_map['table'],pos,{'key':key,'value':value})
-        my_map['size'] += 1
-        my_map['current_factor'] = round(my_map['size'] / my_map['table']['size'], 2)
-    elif pos_key == key:
-        al.change_info(my_map['table'],pos,{'key':key,'value':value})
-        my_map['current_factor'] = round(my_map['size'] / my_map['table']['size'], 2)
+    for entry in my_map["table"]["elements"]:
+        if entry["key"] is not None and entry["key"] != "__EMPTY__":
+            put(resized_map, entry["key"], entry["value"])
+
+    return resized_map
+
+def put(my_map, key, value):
+    hash_value = mp.hash_value(my_map, key) % my_map["capacity"]
+    ocupied, pos = find_slot(my_map, key, hash_value)
+
+    if ocupied:
+        al.change_info(my_map["table"], pos, {'key': key, 'value': value})
     else:
-        if pos <= al.size(my_map["table"]):
-            boolx, pos = find_slot(my_map,key,mp.hash_value(my_map,key))
-            
-            pos_key = my_map['table']["elements"][pos]['key']
-            if pos_key == key:
-                al.change_info(my_map['table'],pos,{'key':key,'value':value})
-                my_map['current_factor'] = round(my_map['size'] / my_map['table']['size'], 2)
-            elif not boolx:
-                al.change_info(my_map['table'],pos,{'key':key,'value':value})
-    if my_map['current_factor'] >= my_map['limit_factor']:
-        my_map = rehash(my_map)
+        al.change_info(my_map["table"], pos, {'key': key, 'value': value})
+        my_map["size"] += 1
+        my_map["current_factor"] = round(my_map["size"] / my_map["capacity"], 2)
+
+        if my_map["current_factor"] >= my_map["limit_factor"]:
+            my_map = rehash(my_map)
+
     return my_map
 
-def contains(map, key):
-    cont = False
-    if map['table']['size'] > 0:
-        for pair in map['table']['elements']:
-            k = pair['key']
-            if k == key:
-                cont = True
-    return cont
+def contains(my_map, key):
+    hash_value = mp.hash_value(my_map, key) % my_map["capacity"]
+    ocupied, _ = find_slot(my_map, key, hash_value)
+    return ocupied
 
 def get(map, key):
     hash_value = mp.hash_value(map, key)
@@ -106,19 +92,16 @@ def get(map, key):
         return al.get_element(map["table"], pos)["value"]
     return None
 
-def remove(map,key): 
-    slot = mp.hash_value(map,key)%map['table']['size']
-    if map['table']['elements'][slot]['key'] == key:
-        map['table']['elements'][slot]['key'] = "__EMPTY__"
-        map['table']['elements'][slot]['value'] = None
-        map['size'] -= 1
-    else:
-        boolx, pos = find_slot(map,key,mp.hash_value(map,key))
-        if boolx:
-            map['table']['elements'][pos]['key'] = "__EMPTY__"
-            map['table']['elements'][pos]['value'] = None
-            map['size'] -= 1
-    return map
+def remove(my_map, key):
+    hash_value = mp.hash_value(my_map, key) % my_map["capacity"]
+    ocupied, pos = find_slot(my_map, key, hash_value)
+
+    if ocupied:
+        al.change_info(my_map["table"], pos, {'key': "__EMPTY__", 'value': None})
+        my_map["size"] -= 1
+        my_map["current_factor"] = round(my_map["size"] / my_map["capacity"], 2)
+
+    return my_map
 
 def key_set(map):
     tabla = map['table']['elements']

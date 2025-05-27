@@ -41,7 +41,7 @@ def load_data(control):
     """
 
     # Solicitar al usuario el tamaño del archivo a cargar
-    filename = "deliverytime_min.csv"
+    filename = "deliverytime_20.csv"
 
     # Cargar los datos
     stats = log.load_data(control, filename)
