@@ -30,16 +30,14 @@ def remove_vertex(graph,key):
         graph['vertices'] = mp.remove(graph['vertices'],key)
     return graph
 
-def add_edge(graph, key_u, key_v, weight=1.0):#ncastano que hizo 
-    
+def add_edge(graph, key_u, key_v, weight=1.0):
     if not mp.contains(graph['vertices'], key_u):
-        raise Exception("El vertice no existe")
+        raise Exception("El vértice no existe")
         
     if not mp.contains(graph['vertices'], key_v):
-        raise Exception("El vertice no existe")
+        raise Exception("El vértice no existe")
 
     vert_u = mp.get(graph['vertices'], key_u)
-
     existe = mp.contains(vert_u['adjacents'], key_v)
 
     mp.put(vert_u['adjacents'], key_v, edge.new_edge(key_v, weight))
