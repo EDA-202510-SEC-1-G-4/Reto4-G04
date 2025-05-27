@@ -65,9 +65,7 @@ def load_data(control):
     stats = log.load_data(control, filename)
 
     # Mostrar estadísticas de carga
-    print("\n" + "=" * 50)
     print("Estadísticas de Carga")
-    print("=" * 50)
 
     stats_table = [
         ["Total de domicilios procesados", stats['total_deliveries']],
@@ -81,7 +79,6 @@ def load_data(control):
     ]
 
     print(tabulate(stats_table, headers=["Estadística", "Valor"], tablefmt="grid"))
-    print("=" * 50 + "\n")
 
 def get_time():
     """Devuelve el instante tiempo de procesamiento en milisegundos"""
