@@ -44,7 +44,7 @@ def load_data(control):
     # Solicitar al usuario el tamaño del archivo a cargar
     print("\nSeleccione el tamaño del archivo a cargar:")
     print("1- Pequeño (deliverytime_min.csv)")
-    print("2- Mediano (deliverytime_10.csv)")
+    print("2- Mediano (deliverytime_20.csv)")
     print("3- Grande (deliverytime_large.csv)")
     size_option = input("Ingrese su opción (1-3): ")
 
@@ -52,7 +52,7 @@ def load_data(control):
     if size_option == "1":
         filename = "deliverytime_min.csv"
     elif size_option == "2":
-        filename = "deliverytime_10.csv"
+        filename = "deliverytime_20.csv"
     elif size_option == "3":
         filename = "deliverytime_large.csv"
     else:
