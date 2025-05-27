@@ -121,7 +121,11 @@ def print_req_4(control):
 
     print(f"Tiempo de ejecución: {result['execution_time']:.2f} ms")
     print(f"Camino encontrado: {' -> '.join(result['path']) if result['path'] else 'Ninguno'}")
-    print(f"Domiciliarios comunes entre A, B y el camino: {', '.join(result['common_domiciliaries']) if result['common_domiciliaries'] else 'Ninguno'}")
+    if result['common_domiciliaries'] and result['common_domiciliaries']['size'] > 0:
+        common_list = result['common_domiciliaries']['elements']
+        print(f"Domiciliarios comunes entre A, B y el camino: {', '.join(common_list)}")
+    else:
+        print("Domiciliarios comunes entre A, B y el camino: Ninguno")
 
     print("\nRequerimiento 4 ejecutado correctamente.\n")
 

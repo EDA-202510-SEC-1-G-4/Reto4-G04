@@ -384,7 +384,7 @@ def req_4(catalog, point_a, point_b):
         return {
             'execution_time': delta_time(start, get_time()),
             'path': [],
-            'common_domiciliaries': [],
+            'common_domiciliaries': al.new_list(),
             'message': 'Uno o ambos puntos no existen en el grafo.'
         }
 
@@ -393,47 +393,61 @@ def req_4(catalog, point_a, point_b):
         return {
             'execution_time': delta_time(start, get_time()),
             'path': [],
-            'common_domiciliaries': [],
+            'common_domiciliaries': al.new_list(),
             'message': 'No hay camino entre los dos puntos.'
         }
 
     path = path_to(search, point_b)
 
-    # Crear mapas para domiciliarios en A y B
-    domis_a = mp.new_map(50)
-    domis_b = mp.new_map(50)
+    # Obtener domiciliarios desde catalog['nodes']
+    domis_a = mp.get(catalog["nodes"], point_a)
+    domis_b = mp.get(catalog["nodes"], point_b)
 
-    for delivery in catalog['deliveries']['elements']:
-        if delivery['origin'] == point_a or delivery['destination'] == point_a:
-            mp.put(domis_a, delivery['person_id'], True)
-        if delivery['origin'] == point_b or delivery['destination'] == point_b:
-            mp.put(domis_b, delivery['person_id'], True)
+    if domis_a is None or domis_b is None:
+        return {
+            'execution_time': delta_time(start, get_time()),
+            'path': path,
+            'common_domiciliaries': al.new_list(),
+            'message': 'No se encontraron domiciliarios en uno o ambos puntos.'
+        }
 
-    # Encontrar candidatos comunes
+    # Crear mapas para facilitar búsqueda
     candidatos = mp.new_map(50)
-    for pair in domis_a['table']['elements']:
-        if pair and pair['key'] is not None:
-            if mp.contains(domis_b, pair['key']):
-                mp.put(candidatos, pair['key'], True)
+    for d in domis_a["domiciliarios"]["elements"]:
+        d_id = d.strip()
+        if al.contains(domis_b["domiciliarios"], d_id):
+            mp.put(candidatos, d_id, True)
 
-    # Buscar domiciliarios que recorren el camino
+    # Revisar domiciliarios que recorren todo el camino
     domis_en_camino = mp.new_map(100)
     for i in range(len(path) - 1):
         u = path[i]
         v = path[i + 1]
-        for delivery in catalog['deliveries']['elements']:
-            if (delivery['origin'] == u and delivery['destination'] == v) or \
-               (delivery['origin'] == v and delivery['destination'] == u):
-                mp.put(domis_en_camino, delivery['person_id'], True)
+        nodo_u = mp.get(catalog["nodes"], u)
+        nodo_v = mp.get(catalog["nodes"], v)
+
+        if nodo_u is None or nodo_v is None:
+            continue
+
+        for d in nodo_u["domiciliarios"]["elements"]:
+            if al.contains(nodo_v["domiciliarios"], d):
+                mp.put(domis_en_camino, d.strip(), True)
 
     # Intersección final
     domis_comunes = al.new_list()
-    for pair in candidatos['table']['elements']:
+    for pair in candidatos["table"]["elements"]:
         if pair and pair['key'] is not None:
             if mp.contains(domis_en_camino, pair['key']):
                 al.add_last(domis_comunes, pair['key'])
 
     end = get_time()
+    print("Domiciliarios en A:", domis_a["domiciliarios"])
+    print("Domiciliarios en B:", domis_b["domiciliarios"])
+    print("Candidatos:", candidatos)
+    print("Domiciliarios en camino:")
+    for pair in domis_en_camino['table']['elements']:
+        if pair:
+            print("-", pair['key'])
     return {
         'execution_time': delta_time(start, end),
         'path': path,
