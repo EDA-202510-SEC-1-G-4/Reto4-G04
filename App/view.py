@@ -51,7 +51,7 @@ def load_data(control):
 
     stats_table = [
         ["Total de domicilios procesados", stats['total_deliveries']],
-        ["Total de domiciliarios únicos", stats['total_delivery_persons']],
+        ["Total de domiciliarios únicos", stats['total_unique_delivery_persons']],
         ["Total de nodos en el grafo", stats['total_nodes']],
         ["Total de arcos en el grafo", stats['total_edges']],
         ["Total de restaurantes únicos", stats['total_restaurants']],
@@ -89,11 +89,9 @@ def print_req_1(control):
 
 
 def print_req_2(control):
-    """
-        Función que imprime la solución del Requerimiento 2 en consola
-    """
-    # TODO: Imprimir el resultado del requerimiento 2
-    pass
+    start = input(str("Ingrese el ID del punto origen de la busqueda: "))
+    end = input(str("Ingrese el ID del punto destino de la busqueda: "))
+    delivery_person = input(str("Ingrese el ID del domiciliario: ")) 
 
 
 def print_req_3(control):
