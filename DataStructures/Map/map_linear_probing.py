@@ -100,19 +100,11 @@ def contains(map, key):
     return cont
 
 def get(map, key):
-    res = None
-    if contains(map,key):
-        hash = mp.hash_value(map,key)
-        if hash <= al.size(map["table"]):
-            if map['table']['elements'][hash]['key'] == key:
-                res = map['table']['elements'][hash]['value'] 
-            else:
-                for i in range(map['table']['size']): 
-                    if map['table']['elements'][hash]['key'] == key:
-                        res = map['table']['elements'][hash]['value']
-                        break
-                hash += 1
-    return res
+    hash_value = mp.hash_value(map, key)
+    found, pos = find_slot(map, key, hash_value)
+    if found:
+        return al.get_element(map["table"], pos)["value"]
+    return None
 
 def remove(map,key): 
     slot = mp.hash_value(map,key)%map['table']['size']

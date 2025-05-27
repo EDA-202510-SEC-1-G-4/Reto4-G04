@@ -34,21 +34,22 @@ def create_node_id(lat, lon):
     return f"{format_coordinate(lat)}_{format_coordinate(lon)}"
 
 
-def load_data(stats):
+def load_data(control):
     """
-    Carga los datos directamente desde el archivo CSV
+    Carga los datos desde el archivo CSV seleccionado por el usuario
+    y muestra estadísticas de carga.
     """
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("Cargando información de los archivos...")
-    print("="*50)
-    
+    print("=" * 50)
+
     # Solicitar al usuario el tamaño del archivo a cargar
     print("\nSeleccione el tamaño del archivo a cargar:")
     print("1- Pequeño (deliverytime_min.csv)")
     print("2- Mediano (deliverytime_10.csv)")
     print("3- Grande (deliverytime_large.csv)")
     size_option = input("Ingrese su opción (1-3): ")
-    
+
     filename = ""
     if size_option == "1":
         filename = "deliverytime_min.csv"
@@ -59,30 +60,28 @@ def load_data(stats):
     else:
         print("Opción inválida, se cargará el archivo pequeño por defecto")
         filename = "deliverytime_min.csv"
-    
-    # Ejecutar la carga de datos
+
+    # Cargar los datos
     stats = log.load_data(control, filename)
-    
+
     # Mostrar estadísticas de carga
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("Estadísticas de Carga")
-    print("="*50)
-    
+    print("=" * 50)
+
     stats_table = [
         ["Total de domicilios procesados", stats['total_deliveries']],
         ["Total de domiciliarios únicos", stats['total_delivery_persons']],
         ["Total de nodos en el grafo", stats['total_nodes']],
         ["Total de arcos en el grafo", stats['total_edges']],
         ["Total de restaurantes únicos", stats['total_restaurants']],
-        ["Total de ubicaciones de entrega únicas", stats['total_delivery_locations']],
+        ["Total de ubicaciones de entrega únicas", stats['delivery_locations']],
         ["Tiempo promedio de entrega (min)", f"{stats['avg_delivery_time']:.2f}"],
-        ["Tiempo de carga (ms)", f"{stats['execution_time']:.2f}"]
+        ["Tiempo de carga (ms)", f"{stats['load_time']:.2f}"]
     ]
-    
+
     print(tabulate(stats_table, headers=["Estadística", "Valor"], tablefmt="grid"))
-    print("="*50 + "\n")
-    
-    return control
+    print("=" * 50 + "\n")
 
 def get_time():
     """Devuelve el instante tiempo de procesamiento en milisegundos"""

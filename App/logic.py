@@ -166,6 +166,10 @@ def load_data(catalog, filename):
     
     end_time = get_time()
     catalog['load_time'] = delta_time(start_time, end_time)
+    catalog['total_delivery_persons'] = mp.size(catalog['domiciliarios_ultimos_destinos']) + mp.size(catalog['domiciliarios_ultimos_tiempos'])
+    catalog['total_nodes'] = G.size(catalog['graph'])
+    catalog['avg_delivery_time'] = catalog['total_delivery_time']/catalog['total_deliveries']
+    catalog['total_restaurants'] = al.size(catalog['restaurant_locations'])
     
     return catalog
 
