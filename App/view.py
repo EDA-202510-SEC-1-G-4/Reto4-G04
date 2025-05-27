@@ -125,8 +125,21 @@ def print_req_3(control):
     """
         Función que imprime la solución del Requerimiento 3 en consola
     """
-    # TODO: Imprimir el resultado del requerimiento 3
-    pass
+    point_a = input("Ingrese el punto geográfico a consultar (formato lat_lon con 4 decimales(0.0000)): ")
+    
+
+    result = log.req_3(control, point_a)
+
+    print("\n=== Resultados del Requerimiento 3 ===\n")
+
+    if result.get("domiciliary_id") is None:
+        print(f"No se encontraron entregas en la ubicación {point_a}.")
+    else:
+        print(f"Domiciliario con más entregas en {point_a}: {result['domiciliary_id']}")
+        print(f"Total de entregas en ese punto: {result['total_deliveries']}")
+        print(f"Vehículo más utilizado en ese punto: {result['most_used_vehicle']}")
+    
+    print(f"Tiempo de ejecución: {result['execution_time']}\n")
 
 
 def print_req_4(control):
