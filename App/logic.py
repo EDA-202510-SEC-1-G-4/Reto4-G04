@@ -441,10 +441,7 @@ def req_4(catalog, point_a, point_b):
                 al.add_last(domis_comunes, pair['key'])
 
     end = get_time()
-    print("Domiciliarios en A:", domis_a["domiciliarios"])
-    print("Domiciliarios en B:", domis_b["domiciliarios"])
-    print("Candidatos:", candidatos)
-    print("Domiciliarios en camino:")
+    
     for pair in domis_en_camino['table']['elements']:
         if pair:
             print("-", pair['key'])
