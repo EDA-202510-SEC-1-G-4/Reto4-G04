@@ -288,12 +288,70 @@ def req_2(catalog):
     pass
 
 
-def req_3(catalog):
-    """
-    Retorna el resultado del requerimiento 3
-    """
-    # TODO: Modificar el requerimiento 3
-    pass
+def req_3(catalog, point_a):
+    start = get_time()
+
+    if not G.contains_vertex(catalog['graph'], point_a):
+        end = get_time()
+        return {
+            'execution_time': delta_time(start, end),
+            'domiciliary_id': None,
+            'total_deliveries': 0,
+            'most_used_vehicle': None,
+            'message': f'La ubicación {point_a} no existe en el grafo.'
+        }
+
+    counts = mp.new_map(100)
+    
+    for delivery in catalog['deliveries']['elements']:
+        if delivery['origin'] == point_a or delivery['destination'] == point_a:
+            person = delivery['person_id']
+            vehicle = delivery['vehicle_type']
+
+            person_entry = mp.get(counts, person)
+            if person_entry is None:
+                person_entry = {
+                    'count': 1,
+                    'vehicles': mp.new_map(5)
+                }
+                mp.put(person_entry['vehicles'], vehicle, 1)
+                mp.put(counts, person, person_entry)
+            else:
+                person_entry['count'] += 1
+                veh_count = mp.get(person_entry['vehicles'], vehicle)
+                if veh_count is None:
+                    mp.put(person_entry['vehicles'], vehicle, 1)
+                else:
+                    mp.put(person_entry['vehicles'], vehicle, veh_count + 1)
+
+    # Buscar el domiciliario con más entregas
+    max_person = None
+    max_count = 0
+    max_vehicle = None
+
+    for entry in counts['table']['elements']:
+        if entry and entry['key'] is not None:
+            person = entry['key']
+            info = entry['value']
+            if info['count'] > max_count:
+                max_count = info['count']
+                max_person = person
+                # Buscar vehículo más usado
+                max_vehicle_count = 0
+                for v_entry in info['vehicles']['table']['elements']:
+                    if v_entry and v_entry['key'] is not None:
+                        if v_entry['value'] > max_vehicle_count:
+                            max_vehicle_count = v_entry['value']
+                            max_vehicle = v_entry['key']
+
+    end = get_time()
+
+    return {
+        'execution_time': delta_time(start, end),
+        'domiciliary_id': max_person,
+        'total_deliveries': max_count,
+        'most_used_vehicle': max_vehicle
+    }
 
 
 def req_4(catalog):
