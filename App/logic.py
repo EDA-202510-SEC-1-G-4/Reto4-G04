@@ -169,7 +169,6 @@ def req_1(catalog, point_a, point_b):
     
     start = get_time()
 
-    # Verificar si los nodos existen en el grafo
     if not G.contains_vertex(catalog['graph'], point_a) or not G.contains_vertex(catalog['graph'], point_b):
         end = get_time()
         return {
@@ -184,7 +183,6 @@ def req_1(catalog, point_a, point_b):
     # Ejecutar BFS para buscar el camino
     search = bfs.bfs(catalog["graph"], point_a)
 
-    # Verificar si hay camino desde point_a hasta point_b
     if not has_path_to(search, point_b):
         end = get_time()
         return {
@@ -196,12 +194,11 @@ def req_1(catalog, point_a, point_b):
             'message': f'No hay conexión entre {point_a} y {point_b}.'
         }
 
-    # Reconstrucción del camino
+   
     path = path_to(search, point_b)
     domiciliarios = set()
     restaurants = set()
 
-    # Recorrer el camino y extraer información relevante
     for node in path:
         node_info = mp.get(catalog["nodes"], node)
         if node_info:

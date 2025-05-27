@@ -84,7 +84,7 @@ def print_req_1(control):
     """
         Función que imprime la solución del Requerimiento 1 en consola
     """
-    print("\n🔍 Identificación de camino simple entre dos ubicaciones geográficas")
+    print("\Identificación de camino simple entre dos ubicaciones geográficas")
 
     # Solicitar al usuario los puntos geográficos de origen y destino
     point_a = input("Ingrese el ID del punto de origen: ")
@@ -95,11 +95,11 @@ def print_req_1(control):
 
     # Si no hay camino, mostrar el mensaje correspondiente
     if "message" in search_result:
-        print(f"\n⚠️ {search_result['message']}\n")
+        print(f"\n {search_result['message']}\n")
         return
 
     # Presentar los resultados en una tabla
-    print("\n📊 Resultados del camino encontrado\n")
+    print("\n Resultados del camino encontrado\n")
     stats_table = [
         ["Tiempo de ejecución (ms)", f"{search_result['execution_time']:.2f}"],
         ["Cantidad de puntos en el camino", search_result["points_count"]],
@@ -109,7 +109,7 @@ def print_req_1(control):
     ]
 
     print(tabulate(stats_table, headers=["Descripción", "Valor"], tablefmt="grid"))
-    print("\n✅ Requerimiento 1 ejecutado correctamente.\n")
+    print("\n Requerimiento 1 ejecutado correctamente.\n")
 
 
 
