@@ -442,9 +442,7 @@ def req_4(catalog, point_a, point_b):
 
     end = get_time()
     
-    for pair in domis_en_camino['table']['elements']:
-        if pair:
-            print("-", pair['key'])
+  
     return {
         'execution_time': delta_time(start, end),
         'path': path,
