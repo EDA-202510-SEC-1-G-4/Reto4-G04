@@ -84,8 +84,33 @@ def print_req_1(control):
     """
         Función que imprime la solución del Requerimiento 1 en consola
     """
-    # TODO: Imprimir el resultado del requerimiento 1
-    pass
+    print("\n🔍 Identificación de camino simple entre dos ubicaciones geográficas")
+
+    # Solicitar al usuario los puntos geográficos de origen y destino
+    point_a = input("Ingrese el ID del punto de origen: ")
+    point_b = input("Ingrese el ID del punto de destino: ")
+
+    # Ejecutar la función req_1 en logic.py
+    search_result = log.req_1(control, point_a, point_b)
+
+    # Si no hay camino, mostrar el mensaje correspondiente
+    if "message" in search_result:
+        print(f"\n⚠️ {search_result['message']}\n")
+        return
+
+    # Presentar los resultados en una tabla
+    print("\n📊 Resultados del camino encontrado\n")
+    stats_table = [
+        ["Tiempo de ejecución (ms)", f"{search_result['execution_time']:.2f}"],
+        ["Cantidad de puntos en el camino", search_result["points_count"]],
+        ["Domiciliarios involucrados", ", ".join(search_result["domiciliarios"]) if search_result["domiciliarios"] else "Ninguno"],
+        ["Secuencia del camino", " -> ".join(search_result["path"])],
+        ["Restaurantes en el camino", ", ".join(search_result["restaurants"]) if search_result["restaurants"] else "Ninguno"]
+    ]
+
+    print(tabulate(stats_table, headers=["Descripción", "Valor"], tablefmt="grid"))
+    print("\n✅ Requerimiento 1 ejecutado correctamente.\n")
+
 
 
 def print_req_2(control):
