@@ -14,14 +14,17 @@ def new_logic():
     Crea el catálogo con las estructuras de datos iniciales
     """
     catalog = {
+        'deliveries': al.new_list(),
         'graph': G.new_graph(),
-        'delivery_persons': mp.new_map(100),
-        'deliveries_count': 0,
-        'last_delivery': mp.new_map(100),
-        'restaurants': mp.new_map(100),
-        'delivery_locations': mp.new_map(100),
-        'delivery_person_set': mp.new_map(100),
-        'total_delivery_time': 0.0
+        'nodes': mp.new_map(1000),  # Para almacenar nodos de ubicación
+        'domiciliarios_ultimos_destinos': mp.new_map(100),
+        'domiciliarios_ultimos_tiempos': mp.new_map(100),
+        'restaurant_locations': al.new_list(),
+        'delivery_locations': al.new_list(),
+        'total_time': 0.0,
+        'total_deliveries': 0,
+        'load_time': 0.0,
+        'total_edges': 0
     }
     return catalog
 
@@ -30,145 +33,141 @@ def new_logic():
 
 
 def format_location(lat, lon):
-    """Formatea coordenadas a string con 4 decimales"""
-    return f"{float(lat):.4f}_{float(lon):.4f}"
+    """
+    Formatea una coordenada (latitud o longitud) a 4 decimales
+    """
+    try:
+        lat_f = "{0:.4f}".format(float(lat))
+        lon_f = "{0:.4f}".format(float(lon))
+        return f"{lat_f}_{lon_f}"
+    except:
+        return "0.0000_0.0000"
+
+def list_contains(lst, value):
+    """
+    Verifica si un valor está en una lista (array_list)
+    """
+    for element in lst['elements']:
+        if element == value:
+            return True
+    return False
 
 def load_data(catalog, filename):
     """
     Carga datos de domicilios desde archivo CSV y construye el grafo
     Versión sin usar dataclass, utilizando nuestras estructuras de datos propias
     """
-    start_time = time.time()
+    start_time = get_time()
     
-    # Configuración de rutas
-    data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Data")
+    # Construir la ruta al archivo
+    data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
     file_path = os.path.join(data_dir, filename)
     
-    # Inicialización de estructuras si no existen
-    if 'graph' not in catalog:
-        catalog['graph'] = mp.new_map(100)  # Mapa para el grafo (origen -> destinos)
-    if 'nodes' not in catalog:
-        catalog['nodes'] = mp.new_map(100)  # Mapa para nodos (ubicación -> info)
-    if 'last_delivery' not in catalog:
-        catalog['last_delivery'] = mp.new_map(100)  # Mapa para últimos destinos por domiciliario
-    if 'last_time' not in catalog:
-        catalog['last_time'] = mp.new_map(100)  # Mapa para últimos tiempos por domiciliario
-    if 'restaurants' not in catalog:
-        catalog['restaurants'] = al.new_list()  # Lista de ubicaciones de restaurantes
-    if 'delivery_locations' not in catalog:
-        catalog['delivery_locations'] = al.new_list()  # Lista de ubicaciones de entrega
-    if 'total_time' not in catalog:
-        catalog['total_time'] = 0.0
-    if 'total_deliveries' not in catalog:
-        catalog['total_deliveries'] = 0
-    if 'total_edges' not in catalog:
-        catalog['total_edges'] = 0
-
     with open(file_path, newline='', encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
+        
         for row in reader:
-            # Procesamiento de cada fila
-            origin = format_location(row['Restaurant_latitude'], row['Restaurant_longitude'])
-            destination = format_location(row['Delivery_location_latitude'], row['Delivery_location_longitude'])
-            time_taken = float(row['Time_taken(min)'])
-            
-            # Actualización de estadísticas
-            catalog['total_time'] += time_taken
-            catalog['total_deliveries'] += 1
-            
-            # Registro de ubicaciones únicas
-            if not al.is_present(catalog['restaurants'], origin):
-                al.add_last(catalog['restaurants'], origin)
+            try:
+                # Procesar cada fila del CSV
+                origin = format_location(row['Restaurant_latitude'], row['Restaurant_longitude'])
+                destination = format_location(row['Delivery_location_latitude'], row['Delivery_location_longitude'])
+                time_taken = float(row['Time_taken(min)'])
                 
-            if not al.is_present(catalog['delivery_locations'], destination):
-                al.add_last(catalog['delivery_locations'], destination)
-            
-            # Manejo de nodos
-            if not mp.contains(catalog['nodes'], origin):
-                node_info = {
-                    'location': origin,
-                    'delivery_persons': mp.new_map(10)
+                # Crear diccionario con la información del delivery (en lugar de Data Class)
+                delivery = {
+                    'delivery_id': row['ID'],
+                    'person_id': row['Delivery_person_ID'],
+                    'person_age': row.get('Delivery_person_Age', 'Unknown'),
+                    'person_rating': row.get('Delivery_person_Ratings', 'Unknown'),
+                    'origin': origin,
+                    'destination': destination,
+                    'order_type': row.get('Type_of_order', 'Unknown'),
+                    'vehicle_type': row.get('Type_of_vehicle', 'Unknown'),
+                    'time_taken': time_taken
                 }
-                mp.put(catalog['nodes'], origin, node_info)
                 
-            if not mp.contains(catalog['nodes'], destination):
-                node_info = {
-                    'location': destination,
-                    'delivery_persons': mp.new_map(10)
-                }
-                mp.put(catalog['nodes'], destination, node_info)
-            
-            # Asociar domiciliario con nodos
-            origin_node = mp.get(catalog['nodes'], origin)
-            dest_node = mp.get(catalog['nodes'], destination)
-            delivery_person_id = row['Delivery_person_ID']
-            
-            if not mp.contains(origin_node['value']['delivery_persons'], delivery_person_id):
-                mp.put(origin_node['value']['delivery_persons'], delivery_person_id, True)
+                # Agregar a la lista de deliveries
+                al.add_last(catalog['deliveries'], delivery)
+                catalog['total_time'] += time_taken
+                catalog['total_deliveries'] += 1
                 
-            if not mp.contains(dest_node['value']['delivery_persons'], delivery_person_id):
-                mp.put(dest_node['value']['delivery_persons'], delivery_person_id, True)
-            
-            # Manejo de arcos en el grafo
-            if not mp.contains(catalog['graph'], origin):
-                mp.put(catalog['graph'], origin, mp.new_map(10))
-                
-            if not mp.contains(catalog['graph'], destination):
-                mp.put(catalog['graph'], destination, mp.new_map(10))
-            
-            origin_edges = mp.get(catalog['graph'], origin)
-            dest_edges = mp.get(catalog['graph'], destination)
-            
-            # Conexión origen-destino (bidireccional)
-            if not mp.contains(origin_edges['value'], destination):
-                mp.put(origin_edges['value'], destination, time_taken)
-                mp.put(dest_edges['value'], origin, time_taken)
-                catalog['total_edges'] += 1
-            else:
-                current_time = mp.get(origin_edges['value'], destination)
-                new_avg = (current_time + time_taken) / 2
-                mp.put(origin_edges['value'], destination, new_avg)
-                mp.put(dest_edges['value'], origin, new_avg)
-            
-            # Conexión con último destino del mismo domiciliario
-            if mp.contains(catalog['last_delivery'], delivery_person_id):
-                last_dest = mp.get(catalog['last_delivery'], delivery_person_id)
-                last_time = mp.get(catalog['last_time'], delivery_person_id)
-                
-                if last_dest != destination:
-                    # Manejo de arcos entre destinos consecutivos
-                    if not mp.contains(catalog['graph'], last_dest):
-                        mp.put(catalog['graph'], last_dest, mp.new_map(10))
-                    
-                    last_dest_edges = mp.get(catalog['graph'], last_dest)
-                    avg_time = (last_time + time_taken) / 2
-                    
-                    if not mp.contains(last_dest_edges['value'], destination):
-                        mp.put(last_dest_edges['value'], destination, avg_time)
-                        mp.put(dest_edges['value'], last_dest, avg_time)
+                # Procesar nodos (ubicaciones)
+                for point in [origin, destination]:
+                    node_entry = mp.get(catalog['nodes'], point)
+                    if node_entry is None:
+                        # Crear nuevo nodo si no existe
+                        node = {
+                            'location': point,
+                            'domiciliarios': al.new_list()
+                        }
+                        mp.put(catalog['nodes'], point, node)
                     else:
-                        current_avg = mp.get(last_dest_edges['value'], destination)
-                        new_avg = (current_avg + avg_time) / 2
-                        mp.put(last_dest_edges['value'], destination, new_avg)
-                        mp.put(dest_edges['value'], last_dest, new_avg)
-            
-            # Actualizar último destino y tiempo
-            mp.put(catalog['last_delivery'], delivery_person_id, destination)
-            mp.put(catalog['last_time'], delivery_person_id, time_taken)
+                        node = node_entry
+                    
+                    # Agregar domiciliario si no está ya en la lista
+                    if not list_contains(node['domiciliarios'], delivery['person_id']):
+                        al.add_last(node['domiciliarios'], delivery['person_id'])
+                
+                # Agregar ubicaciones únicas de restaurantes y entregas
+                if not list_contains(catalog['restaurant_locations'], origin):
+                    al.add_last(catalog['restaurant_locations'], origin)
+                
+                if not list_contains(catalog['delivery_locations'], destination):
+                    al.add_last(catalog['delivery_locations'], destination)
+                
+                # Agregar conexiones al grafo (origen -> destino)
+                # Verificar si ya existe conexión entre estos nodos
+                existing_edge = G.get_edge(catalog['graph'], origin, destination)
+                
+                if existing_edge is None:
+                    # Crear nueva conexión bidireccional
+                    G.add_edge(catalog['graph'], origin, destination, time_taken)
+                    G.add_edge(catalog['graph'], destination, origin, time_taken)
+                    catalog['total_edges'] += 1
+                else:
+                    # Actualizar peso como promedio
+                    previous_time = existing_edge['weight']
+                    new_avg = (previous_time + time_taken) / 2
+                    G.add_edge(catalog['graph'], origin, destination, new_avg)
+                    G.add_edge(catalog['graph'], destination, origin, new_avg)
+                
+                # Actualizar último destino y tiempo del domiciliario
+                mp.put(catalog['domiciliarios_ultimos_destinos'], delivery['person_id'], destination)
+                mp.put(catalog['domiciliarios_ultimos_tiempos'], delivery['person_id'], time_taken)
+                
+                # Agregar conexión entre destinos consecutivos del mismo domiciliario
+                prev_dest_entry = mp.get(catalog['domiciliarios_ultimos_destinos'], delivery['person_id'])
+                prev_time_entry = mp.get(catalog['domiciliarios_ultimos_tiempos'], delivery['person_id'])
+                
+                if prev_dest_entry is not None and prev_dest_entry != destination:
+                    prev_dest = prev_dest_entry
+                    prev_time = prev_time_entry
+                    avg_time = (prev_time + time_taken) / 2
+                    
+                    # Verificar si ya existe conexión entre estos destinos
+                    existing_prev_edge = G.get_edge(catalog['graph'], prev_dest, destination)
+                    
+                    if existing_prev_edge is None:
+                        # Crear nueva conexión bidireccional
+                        G.add_edge(catalog['graph'], prev_dest, destination, avg_time)
+                        G.add_edge(catalog['graph'], destination, prev_dest, avg_time)
+                    else:
+                        # Actualizar peso como promedio
+                        existing_time = existing_prev_edge['weight']
+                        final_avg = (existing_time + avg_time) / 2
+                        G.add_edge(catalog['graph'], prev_dest, destination, final_avg)
+                        G.add_edge(catalog['graph'], destination, prev_dest, final_avg)
+                
+            except Exception as e:
+                print("❌ ERROR en fila:")
+                print(row)
+                print("🧨 Detalle del error:", e)
+                continue
     
-    # Cálculo de estadísticas finales
-    catalog['load_time'] = time.time() - start_time
+    end_time = get_time()
+    catalog['load_time'] = delta_time(start_time, end_time)
     
-    return {
-        'total_deliveries': catalog['total_deliveries'],
-        'total_delivery_persons': mp.size(catalog['last_delivery']),
-        'total_nodes': mp.size(catalog['nodes']),
-        'total_edges': catalog['total_edges'],
-        'total_restaurants': al.size(catalog['restaurants']),
-        'total_delivery_locations': al.size(catalog['delivery_locations']),
-        'avg_delivery_time': catalog['total_time'] / catalog['total_deliveries'] if catalog['total_deliveries'] > 0 else 0,
-        'execution_time': catalog['load_time']
-    }
+    return catalog
 
 
     

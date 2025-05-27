@@ -1,6 +1,7 @@
 import sys
 import csv
 import os
+import time
 from tabulate import tabulate
 from DataStructures.Graph import digraph as G
 from DataStructures.Map import map_linear_probing as mp
@@ -33,43 +34,58 @@ def create_node_id(lat, lon):
     return f"{format_coordinate(lat)}_{format_coordinate(lon)}"
 
 
-
-def load_data(control):
+def load_data(stats):
     """
     Carga los datos directamente desde el archivo CSV
     """
-    print("\n=== CARGAR DATOS ===")
-    filename = "/deliverytime_min.csv"
-    start = log.get_time()
-    retorno = log.load_data(control,filename)
-    end = log.get_time()
-    
-    # Listar archivos CSV disponibles
-
-        # Mostrar resultados
     print("\n" + "="*50)
-    print("RESULTADOS DE LA CARGA DE DATOS")
+    print("Cargando información de los archivos...")
     print("="*50)
-    print(retorno)
-    print(log.delta_time(start,end))
-        
-    # stats_table = [
-    #     ["Domicilios procesados", stats['total_deliveries']],
-    #     ["Domiciliarios únicos", stats['total_delivery_persons']],
-    #     ["Nodos en el grafo", stats['total_nodes']],
-    #     ["Arcos en el grafo", stats['total_edges']],
-    #     ["Restaurantes únicos", stats['total_restaurants']],
-    #     ["Ubicaciones de entrega", stats['total_delivery_locations']],
-    #     ["Tiempo promedio (min)", f"{stats['avg_delivery_time']:.2f}"],
-    #     ["Tiempo de carga (ms)", f"{stats['execution_time']:.2f}"]
-    # ]
-        
-    # print(tabulate(stats_table, headers=["Métrica", "Valor"], tablefmt="grid"))
-    # print("="*50 + "\n")
+    
+    # Solicitar al usuario el tamaño del archivo a cargar
+    print("\nSeleccione el tamaño del archivo a cargar:")
+    print("1- Pequeño (deliverytime_min.csv)")
+    print("2- Mediano (deliverytime_10.csv)")
+    print("3- Grande (deliverytime_large.csv)")
+    size_option = input("Ingrese su opción (1-3): ")
+    
+    filename = ""
+    if size_option == "1":
+        filename = "deliverytime_min.csv"
+    elif size_option == "2":
+        filename = "deliverytime_10.csv"
+    elif size_option == "3":
+        filename = "deliverytime_large.csv"
+    else:
+        print("Opción inválida, se cargará el archivo pequeño por defecto")
+        filename = "deliverytime_min.csv"
+    
+    # Ejecutar la carga de datos
+    stats = log.load_data(control, filename)
+    
+    # Mostrar estadísticas de carga
+    print("\n" + "="*50)
+    print("Estadísticas de Carga")
+    print("="*50)
+    
+    stats_table = [
+        ["Total de domicilios procesados", stats['total_deliveries']],
+        ["Total de domiciliarios únicos", stats['total_delivery_persons']],
+        ["Total de nodos en el grafo", stats['total_nodes']],
+        ["Total de arcos en el grafo", stats['total_edges']],
+        ["Total de restaurantes únicos", stats['total_restaurants']],
+        ["Total de ubicaciones de entrega únicas", stats['total_delivery_locations']],
+        ["Tiempo promedio de entrega (min)", f"{stats['avg_delivery_time']:.2f}"],
+        ["Tiempo de carga (ms)", f"{stats['execution_time']:.2f}"]
+    ]
+    
+    print(tabulate(stats_table, headers=["Estadística", "Valor"], tablefmt="grid"))
+    print("="*50 + "\n")
+    
+    return control
 
 def get_time():
     """Devuelve el instante tiempo de procesamiento en milisegundos"""
-    import time
     return float(time.perf_counter()*1000)
 
 def delta_time(start, end):
