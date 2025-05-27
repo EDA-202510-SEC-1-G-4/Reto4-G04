@@ -170,7 +170,7 @@ def load_data(catalog, filename):
     catalog['total_nodes'] = G.size(catalog['graph'])
     catalog['avg_delivery_time'] = catalog['total_delivery_time']/catalog['total_deliveries']
     catalog['total_restaurants'] = al.size(catalog['restaurant_locations'])
-    
+    catalog['total_delivery_locations'] = al.size(catalog['delivery_locations'])
     return catalog
 
 

@@ -39,9 +39,7 @@ def load_data(control):
     Carga los datos desde el archivo CSV seleccionado por el usuario
     y muestra estadísticas de carga.
     """
-    print("\n" + "=" * 50)
     print("Cargando información de los archivos...")
-    print("=" * 50)
 
     # Solicitar al usuario el tamaño del archivo a cargar
     print("\nSeleccione el tamaño del archivo a cargar:")
@@ -73,12 +71,12 @@ def load_data(control):
         ["Total de nodos en el grafo", stats['total_nodes']],
         ["Total de arcos en el grafo", stats['total_edges']],
         ["Total de restaurantes únicos", stats['total_restaurants']],
-        ["Total de ubicaciones de entrega únicas", stats['delivery_locations']],
+        ["Total de ubicaciones de entrega únicas", stats['total_delivery_locations']],
         ["Tiempo promedio de entrega (min)", f"{stats['avg_delivery_time']:.2f}"],
         ["Tiempo de carga (ms)", f"{stats['load_time']:.2f}"]
     ]
 
-    print(tabulate(stats_table, headers=["Estadística", "Valor"], tablefmt="grid"))
+    print(tabulate(stats_table))
 
 def get_time():
     """Devuelve el instante tiempo de procesamiento en milisegundos"""
