@@ -21,7 +21,8 @@ def new_logic():
     catalog = {
         'deliveries': al.new_list(),
         'graph': G.new_graph(100),
-        'nodes': mp.new_map(1000),  # Para almacenar nodos de ubicación
+        'nodes': mp.new_map(1000), 
+        'domiciliarios':al.new_list(), # Para almacenar nodos de ubicación
         'domiciliarios_ultimos_destinos': mp.new_map(100),
         'domiciliarios_ultimos_tiempos': mp.new_map(100),
         'restaurant_locations': al.new_list(),
@@ -92,6 +93,10 @@ def load_data(catalog, filename):
         catalog['total_delivery_time'] += time_taken
         catalog['total_deliveries'] += 1
 
+        # Agregar domiciliario único
+        if not al.contains(catalog['domiciliarios'],person_id):
+            al.add_last(catalog['domiciliarios'], person_id)
+
         # Agregar domiciliarios a nodos
         for point in (origin, destination):
             node = mp.get(catalog['nodes'], point)
@@ -139,7 +144,7 @@ def load_data(catalog, filename):
 
     end_time = get_time()
     catalog['load_time'] = delta_time(start_time, end_time)
-    catalog['total_delivery_persons'] = mp.size(catalog['domiciliarios_ultimos_destinos'])
+    catalog['total_unique_delivery_persons'] = al.size(catalog['domiciliarios'])  # Cantidad única de domiciliarios
     catalog['total_nodes'] = G.order(catalog['graph'])
     catalog['avg_delivery_time'] = catalog['total_delivery_time'] / catalog['total_deliveries']
     catalog['total_restaurants'] = al.size(catalog['restaurant_locations'])

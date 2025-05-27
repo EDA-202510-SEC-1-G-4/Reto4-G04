@@ -51,7 +51,7 @@ def load_data(control):
 
     stats_table = [
         ["Total de domicilios procesados", stats['total_deliveries']],
-        ["Total de domiciliarios únicos", stats['total_delivery_persons']],
+        ["Total de domiciliarios únicos", stats['total_unique_delivery_persons']],
         ["Total de nodos en el grafo", stats['total_nodes']],
         ["Total de arcos en el grafo", stats['total_edges']],
         ["Total de restaurantes únicos", stats['total_restaurants']],
