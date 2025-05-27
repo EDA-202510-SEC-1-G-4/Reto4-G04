@@ -44,7 +44,7 @@ def bfs_vertex(my_graph, search):
         current_dist = mp.get(visited, current)['dist_to']
         adj_map = entry["adjacents"]
         adj_keys = mp.key_set(adj_map)
-        print(adj_keys)
+        
         
         for key in adj_keys["elements"]:  # key es el nombre del vértice, como "Bogotá"
             if not mp.contains(visited, key):

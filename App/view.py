@@ -146,8 +146,24 @@ def print_req_4(control):
     """
         Función que imprime la solución del Requerimiento 4 en consola
     """
-    # TODO: Imprimir el resultado del requerimiento 4
-    pass
+    print("\n=== Requerimiento 4: Camino entre dos ubicaciones y domiciliarios comunes ===\n")
+
+    point_a = input("Ingrese el ID del punto de origen: ")
+    point_b = input("Ingrese el ID del punto de destino: ")
+
+    result = log.req_4(control, point_a, point_b)
+
+    print("\nResultados del Requerimiento 4:\n")
+
+    if "message" in result:
+        print(f"{result['message']}\n")
+        
+
+    print(f"Tiempo de ejecución: {result['execution_time']:.2f} ms")
+    print(f"Camino encontrado: {' -> '.join(result['path']) if result['path'] else 'Ninguno'}")
+    print(f"Domiciliarios comunes entre A, B y el camino: {', '.join(result['common_domiciliaries']) if result['common_domiciliaries'] else 'Ninguno'}")
+
+    print("\nRequerimiento 4 ejecutado correctamente.\n")
 
 
 def print_req_5(control):
