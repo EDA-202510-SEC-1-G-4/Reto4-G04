@@ -6,6 +6,7 @@ from DataStructures.Map import map_linear_probing as mp
 from DataStructures.List import array_list as al
 from DataStructures.Graph import edge as edg  
 from DataStructures.Graph import bfs as bfs
+from DataStructures.Graph import dfs as dfs
 from DataStructures.Queue import queue as q
 from DataStructures.Stack import stack as s
 
@@ -241,12 +242,73 @@ def path_to(search, vertex):
     return path
     
 
-def req_2(catalog):
+def req_2(graph, start, end, delivery_person):
     """
-    Retorna el resultado del requerimiento 2
+    Encuentra el camino simple con menos puntos intermedios entre dos ubicaciones para un domiciliario específico.
+    
+    Parameters:
+    graph (dict): Grafo de ubicaciones.
+    start (str): Id del punto de inicio.
+    end (str): Id del punto de destino.
+    delivery_person (str): Id del domiciliario.
+
+    Returns:
+    dict: Información del camino encontrado.
     """
-    # TODO: Modificar el requerimiento 2
-    pass
+    start_time = time.time()  # ⏳ Iniciar medición del tiempo
+
+    # Filtrar el grafo para que solo contenga ubicaciones visitadas por el domiciliario
+    filtered_graph = G.new_graph()
+    for vertex_key in G.vertices(graph):
+        vertex = G.get_vertex(graph, vertex_key)
+        if al.contains(vertex["domiciliarios"], delivery_person):  # Filtrar solo ubicaciones visitadas
+            G.insert_vertex(filtered_graph, vertex_key, vertex)
+
+    # Ejecutar DFS en el grafo filtrado
+    search = dfs(filtered_graph, start)
+
+    # Verificar si hay camino entre A y B
+    if not has_path_to(search, end):
+        return {"message": "No hay conexión entre las ubicaciones para este domiciliario."}
+
+    # Obtener el camino más corto con DFS y tu estructura de pilas
+    path_stack = path_to(search, end)
+    shortest_path = al.new_list()  # Usar listas basadas en arreglos para almacenar el camino
+
+    while not s.is_empty(path_stack):
+        al.add_first(shortest_path, s.pop(path_stack))  # Extraer desde la pila y agregar en orden
+
+    # Extraer detalles del camino
+    total_locations = al.size(shortest_path)
+    unique_delivery_persons = al.new_list()
+    restaurants_found = al.new_list()
+
+    for location in shortest_path["elements"]:
+        vertex = G.get_vertex(graph, location)
+        
+        # Agregar domiciliarios únicos
+        for person in vertex["domiciliarios"]["elements"]:
+            if not al.contains(unique_delivery_persons, person):
+                al.add_last(unique_delivery_persons, person)
+
+        # Agregar restaurantes encontrados
+        if "restaurant" in vertex and vertex["restaurant"] not in restaurants_found["elements"]:
+            al.add_last(restaurants_found, vertex["restaurant"])
+
+    end_time = time.time()  # ⏳ Finalizar medición del tiempo
+    execution_time = round(end_time - start_time, 4)
+
+    # Retornar resultados en formato requerido
+
+    return execution_time,total_locations,shortest_path['elements'],unique_delivery_persons['elements'],restaurants_found['elements']
+
+    # return {
+    #     "execution_time": execution_time,  
+    #     "total_locations": total_locations,
+    #     "shortest_path": shortest_path["elements"],
+    #     "unique_delivery_persons": unique_delivery_persons["elements"],
+    #     "restaurants_found": restaurants_found["elements"]
+    # }
 
 
 def req_3(catalog, point_a):
