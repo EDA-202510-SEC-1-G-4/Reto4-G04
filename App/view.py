@@ -121,7 +121,11 @@ def print_req_4(control):
 
     print(f"Tiempo de ejecución: {result['execution_time']:.2f} ms")
     print(f"Camino encontrado: {' -> '.join(result['path']) if result['path'] else 'Ninguno'}")
-    print(f"Domiciliarios comunes entre A, B y el camino: {', '.join(result['common_domiciliaries']) if result['common_domiciliaries'] else 'Ninguno'}")
+    if result['common_domiciliaries'] and result['common_domiciliaries']['size'] > 0:
+        common_list = result['common_domiciliaries']['elements']
+        print(f"Domiciliarios comunes entre A, B y el camino: {', '.join(common_list)}")
+    else:
+        print("Domiciliarios comunes entre A, B y el camino: Ninguno")
 
     print("\nRequerimiento 4 ejecutado correctamente.\n")
 
@@ -130,8 +134,42 @@ def print_req_5(control):
     """
         Función que imprime la solución del Requerimiento 5 en consola
     """
-    # TODO: Imprimir el resultado del requerimiento 5
-    pass
+    print("\n🚀 Análisis del domiciliario con mayor distancia recorrida en N cambios de ubicación")
+
+    # Solicitar al usuario el punto de inicio y el número de cambios de ubicación
+    point_a = input("Ingrese el ID del punto de inicio (formato lat_lon con 4 decimales): ").strip()
+    n_changes = input("Ingrese el número N de cambios de ubicación a consultar: ").strip()
+
+    # Validar que n_changes no esté vacío y sea un número entero
+    if not n_changes.isdigit():
+        print("\n⚠️ Error: Debe ingresar un número entero válido para N.\n")
+        return
+
+    n_changes = int(n_changes)
+
+    # Ejecutar la función req_5 en logic.py
+    search_result = log.req_5(control, point_a, n_changes)
+
+    # Si hay un mensaje de error, mostrarlo y terminar
+    if "message" in search_result:
+        print(f"\n⚠️ {search_result['message']}\n")
+        return
+
+    # Presentar los resultados en una tabla
+    print("\n📊 Resultados del análisis\n")
+    stats_table = [
+        ["Tiempo de ejecución (ms)", f"{search_result['execution_time']:.2f}"],
+        ["ID del domiciliario", search_result.get("domiciliary_id", "No disponible")],
+        ["Distancia máxima recorrida (km)", f"{search_result.get('max_distance_km', 0):.2f}"],
+        ["Secuencia del camino", " -> ".join(search_result.get("path", ["No hay camino"]))]
+    ]
+
+    print(tabulate(stats_table, headers=["Descripción", "Valor"], tablefmt="grid"))
+    print("\n✅ Requerimiento 5 ejecutado correctamente.\n")
+
+
+
+
 
 
 def print_req_6(control):

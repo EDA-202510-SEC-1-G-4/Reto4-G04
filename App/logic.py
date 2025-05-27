@@ -9,6 +9,7 @@ from DataStructures.Graph import bfs as bfs
 from DataStructures.Graph import dfs as dfs
 from DataStructures.Queue import queue as q
 from DataStructures.Stack import stack as s
+import math
 
 
 
@@ -377,7 +378,7 @@ def req_4(catalog, point_a, point_b):
         return {
             'execution_time': delta_time(start, get_time()),
             'path': [],
-            'common_domiciliaries': [],
+            'common_domiciliaries': al.new_list(),
             'message': 'Uno o ambos puntos no existen en el grafo.'
         }
 
@@ -386,47 +387,56 @@ def req_4(catalog, point_a, point_b):
         return {
             'execution_time': delta_time(start, get_time()),
             'path': [],
-            'common_domiciliaries': [],
+            'common_domiciliaries': al.new_list(),
             'message': 'No hay camino entre los dos puntos.'
         }
 
     path = path_to(search, point_b)
 
-    # Crear mapas para domiciliarios en A y B
-    domis_a = mp.new_map(50)
-    domis_b = mp.new_map(50)
+    # Obtener domiciliarios desde catalog['nodes']
+    domis_a = mp.get(catalog["nodes"], point_a)
+    domis_b = mp.get(catalog["nodes"], point_b)
 
-    for delivery in catalog['deliveries']['elements']:
-        if delivery['origin'] == point_a or delivery['destination'] == point_a:
-            mp.put(domis_a, delivery['person_id'], True)
-        if delivery['origin'] == point_b or delivery['destination'] == point_b:
-            mp.put(domis_b, delivery['person_id'], True)
+    if domis_a is None or domis_b is None:
+        return {
+            'execution_time': delta_time(start, get_time()),
+            'path': path,
+            'common_domiciliaries': al.new_list(),
+            'message': 'No se encontraron domiciliarios en uno o ambos puntos.'
+        }
 
-    # Encontrar candidatos comunes
+    # Crear mapas para facilitar búsqueda
     candidatos = mp.new_map(50)
-    for pair in domis_a['table']['elements']:
-        if pair and pair['key'] is not None:
-            if mp.contains(domis_b, pair['key']):
-                mp.put(candidatos, pair['key'], True)
+    for d in domis_a["domiciliarios"]["elements"]:
+        d_id = d.strip()
+        if al.contains(domis_b["domiciliarios"], d_id):
+            mp.put(candidatos, d_id, True)
 
-    # Buscar domiciliarios que recorren el camino
+    # Revisar domiciliarios que recorren todo el camino
     domis_en_camino = mp.new_map(100)
     for i in range(len(path) - 1):
         u = path[i]
         v = path[i + 1]
-        for delivery in catalog['deliveries']['elements']:
-            if (delivery['origin'] == u and delivery['destination'] == v) or \
-               (delivery['origin'] == v and delivery['destination'] == u):
-                mp.put(domis_en_camino, delivery['person_id'], True)
+        nodo_u = mp.get(catalog["nodes"], u)
+        nodo_v = mp.get(catalog["nodes"], v)
+
+        if nodo_u is None or nodo_v is None:
+            continue
+
+        for d in nodo_u["domiciliarios"]["elements"]:
+            if al.contains(nodo_v["domiciliarios"], d):
+                mp.put(domis_en_camino, d.strip(), True)
 
     # Intersección final
     domis_comunes = al.new_list()
-    for pair in candidatos['table']['elements']:
+    for pair in candidatos["table"]["elements"]:
         if pair and pair['key'] is not None:
             if mp.contains(domis_en_camino, pair['key']):
                 al.add_last(domis_comunes, pair['key'])
 
     end = get_time()
+    
+  
     return {
         'execution_time': delta_time(start, end),
         'path': path,
@@ -434,13 +444,97 @@ def req_4(catalog, point_a, point_b):
         'message': 'Camino encontrado exitosamente.'
     }
 
+def haversine(lat1, lon1, lat2, lon2):
+    """
+    Calcula la distancia geográfica entre dos puntos usando la fórmula de Haversine.
+    Retorna la distancia en kilómetros.
+    """
+    R = 6371  # Radio de la Tierra en km
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat / 2) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return R * c
 
-def req_5(catalog):
-    """
-    Retorna el resultado del requerimiento 5
-    """
-    # TODO: Modificar el requerimiento 5
-    pass
+
+
+
+def req_5(catalog, point_a, n_changes):
+    start_time = get_time()
+
+    # Verificar si el punto de inicio existe en el grafo
+    if not G.contains_vertex(catalog['graph'], point_a):
+        end_time = get_time()
+        return {
+            'execution_time': delta_time(start_time, end_time),
+            'domiciliary_id': None,
+            'max_distance_km': 0,
+            'path': [],
+            'message': f'El punto {point_a} no existe en el grafo.'
+        }
+
+    # Ejecutar BFS para encontrar rutas desde el punto A
+    search = bfs.bfs(catalog["graph"], point_a)
+
+    # Almacenar la distancia recorrida por cada domiciliario
+    domiciliarios_distancias = mp.new_map(100)
+    path_distances = {}
+
+    for delivery in catalog['deliveries']['elements']:
+        # Usar directamente 'origin' y 'destination'
+        origin = delivery['origin']
+        destination = delivery['destination']
+        person_id = delivery['person_id']
+
+        if "_" in origin and "_" in destination:
+            lat1, lon1 = map(float, origin.split('_'))
+            lat2, lon2 = map(float, destination.split('_'))
+            dist = haversine(lat1, lon1, lat2, lon2)
+        else:
+            print(f"⚠️ Datos inválidos -> origin: {origin}, destination: {destination}")
+            dist = 0  # Evita errores si los datos no tienen el formato esperado
+
+        # Registrar distancia recorrida por cada domiciliario
+        if mp.contains(domiciliarios_distancias, person_id):
+            prev_dist = mp.get(domiciliarios_distancias, person_id)
+            mp.put(domiciliarios_distancias, person_id, prev_dist + dist)
+        else:
+            mp.put(domiciliarios_distancias, person_id, dist)
+
+        # Registrar los caminos posibles
+        path_distances[person_id] = path_to(search, person_id)
+
+    # Encontrar el domiciliario con mayor distancia recorrida en N cambios
+    max_person = None
+    max_distance = 0
+    max_path = []
+
+    for pair in domiciliarios_distancias['table']['elements']:
+        if pair and pair['key'] is not None:
+            person_id = pair['key']
+            total_distance = pair['value']
+            path = path_distances.get(person_id, [])[:n_changes]  # Tomar solo los primeros N cambios
+
+            if total_distance > max_distance:
+                max_distance = total_distance
+                max_person = person_id
+                max_path = path
+
+    end_time = get_time()
+
+    return {
+        'execution_time': delta_time(start_time, end_time),
+        'domiciliary_id': max_person,
+        'max_distance_km': max_distance,
+        'path': max_path,
+        'message': 'Análisis completado exitosamente.'
+    }
+
+
+
+
+    
+
 
 def req_6(catalog):
     """
