@@ -74,9 +74,20 @@ def load_data(catalog, filename):
 
         # Asegurar que los nodos existen
         if not G.contains_vertex(catalog['graph'], origin):
-            catalog['graph'] = G.insert_vertex(catalog['graph'], origin, al.new_list())
+            doms = al.new_list()
+            al.add_last(doms,person_id)
+            catalog['graph'] = G.insert_vertex(catalog['graph'], origin, doms)
+        else:
+            node_doms = G.get_vertex_information(catalog['graph'],origin)
+            al.add_last(node_doms,person_id)
+
         if not G.contains_vertex(catalog['graph'], destination):
-            catalog['graph'] = G.insert_vertex(catalog['graph'], destination, al.new_list())
+            doms = al.new_list()
+            al.add_last(doms,person_id)
+            catalog['graph'] = G.insert_vertex(catalog['graph'], destination, doms)
+        else:
+            node_doms = G.get_vertex_information(catalog['graph'],destination)
+            al.add_last(node_doms,person_id)
 
         # Crear entrega
         delivery = {
@@ -242,73 +253,55 @@ def path_to(search, vertex):
     return path
     
 
-def req_2(graph, start, end, delivery_person):
-    """
-    Encuentra el camino simple con menos puntos intermedios entre dos ubicaciones para un domiciliario específico.
-    
-    Parameters:
-    graph (dict): Grafo de ubicaciones.
-    start (str): Id del punto de inicio.
-    end (str): Id del punto de destino.
-    delivery_person (str): Id del domiciliario.
-
-    Returns:
-    dict: Información del camino encontrado.
-    """
-    start_time = time.time()  # ⏳ Iniciar medición del tiempo
-
-    # Filtrar el grafo para que solo contenga ubicaciones visitadas por el domiciliario
+def req_2(catalog, start, end, delivery_person):
+    graph = catalog['graph']
     filtered_graph = G.new_graph()
-    for vertex_key in G.vertices(graph):
-        vertex = G.get_vertex(graph, vertex_key)
-        if al.contains(vertex["domiciliarios"], delivery_person):  # Filtrar solo ubicaciones visitadas
-            G.insert_vertex(filtered_graph, vertex_key, vertex)
 
-    # Ejecutar DFS en el grafo filtrado
-    search = dfs(filtered_graph, start)
+    # 1. Filtrar vértices visitados por el domiciliario
+    for location in G.vertices(graph)['elements']:
+        node = mp.get(graph['vertices'], location)
+        if node and al.contains(node['value'], delivery_person):
+            G.insert_vertex(filtered_graph, location, node)
 
-    # Verificar si hay camino entre A y B
+    # 2. Agregar solo los arcos entre ubicaciones válidas (dentro del grafo filtrado)
+    for location in G.vertices(filtered_graph)['elements']:
+        for adj in G.adjacents(graph, location)['elements']:
+            if G.contains_vertex(filtered_graph, adj):
+                edge = G.get_edge(graph, location, adj)
+                if edge:
+                    G.add_edge(filtered_graph, location, adj, edge['weight'])
+
+    # 3. Ejecutar DFS desde el punto de inicio
+    search = dfs.dfs(graph, start)
+
     if not has_path_to(search, end):
         return {"message": "No hay conexión entre las ubicaciones para este domiciliario."}
 
-    # Obtener el camino más corto con DFS y tu estructura de pilas
+    # 4. Reconstruir el camino
     path_stack = path_to(search, end)
-    shortest_path = al.new_list()  # Usar listas basadas en arreglos para almacenar el camino
-
+    shortest_path = al.new_list()
     while not s.is_empty(path_stack):
-        al.add_first(shortest_path, s.pop(path_stack))  # Extraer desde la pila y agregar en orden
+        al.add_last(shortest_path, s.pop(path_stack))
 
-    # Extraer detalles del camino
+    # 5. Obtener detalles del camino
     total_locations = al.size(shortest_path)
     unique_delivery_persons = al.new_list()
     restaurants_found = al.new_list()
 
-    for location in shortest_path["elements"]:
-        vertex = G.get_vertex(graph, location)
-        
-        # Agregar domiciliarios únicos
-        for person in vertex["domiciliarios"]["elements"]:
+    for location in shortest_path['elements']:
+        node = mp.get(graph['vertices'], location)
+
+        # Domiciliarios únicos
+        for person in node['value']['elements']:
             if not al.contains(unique_delivery_persons, person):
                 al.add_last(unique_delivery_persons, person)
 
-        # Agregar restaurantes encontrados
-        if "restaurant" in vertex and vertex["restaurant"] not in restaurants_found["elements"]:
-            al.add_last(restaurants_found, vertex["restaurant"])
+        # Restaurantes (ubicaciones de origen)
+        if al.contains(catalog['restaurant_locations'], location):
+            if not al.contains(restaurants_found, location):
+                al.add_last(restaurants_found, location)
 
-    end_time = time.time()  # ⏳ Finalizar medición del tiempo
-    execution_time = round(end_time - start_time, 4)
-
-    # Retornar resultados en formato requerido
-
-    return execution_time,total_locations,shortest_path['elements'],unique_delivery_persons['elements'],restaurants_found['elements']
-
-    # return {
-    #     "execution_time": execution_time,  
-    #     "total_locations": total_locations,
-    #     "shortest_path": shortest_path["elements"],
-    #     "unique_delivery_persons": unique_delivery_persons["elements"],
-    #     "restaurants_found": restaurants_found["elements"]
-    # }
+    return total_locations,unique_delivery_persons['elements'],shortest_path['elements'],restaurants_found['elements']
 
 
 def req_3(catalog, point_a):
