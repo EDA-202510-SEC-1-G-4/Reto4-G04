@@ -84,62 +84,22 @@ def print_req_1(control):
     """
         Función que imprime la solución del Requerimiento 1 en consola
     """
-    print("\Identificación de camino simple entre dos ubicaciones geográficas")
-
-    # Solicitar al usuario los puntos geográficos de origen y destino
-    point_a = input("Ingrese el ID del punto de origen: ")
-    point_b = input("Ingrese el ID del punto de destino: ")
-
-    # Ejecutar la función req_1 en logic.py
-    search_result = log.req_1(control, point_a, point_b)
-
-    # Si no hay camino, mostrar el mensaje correspondiente
-    if "message" in search_result:
-        print(f"\n {search_result['message']}\n")
-        return
-
-    # Presentar los resultados en una tabla
-    print("\n Resultados del camino encontrado\n")
-    stats_table = [
-        ["Tiempo de ejecución (ms)", f"{search_result['execution_time']:.2f}"],
-        ["Cantidad de puntos en el camino", search_result["points_count"]],
-        ["Domiciliarios involucrados", ", ".join(search_result["domiciliarios"]) if search_result["domiciliarios"] else "Ninguno"],
-        ["Secuencia del camino", " -> ".join(search_result["path"])],
-        ["Restaurantes en el camino", ", ".join(search_result["restaurants"]) if search_result["restaurants"] else "Ninguno"]
-    ]
-
-    print(tabulate(stats_table, headers=["Descripción", "Valor"], tablefmt="grid"))
-    print("\n Requerimiento 1 ejecutado correctamente.\n")
-
+    # TODO: Imprimir el resultado del requerimiento 1
+    pass
 
 
 def print_req_2(control):
-    """
-        Función que imprime la solución del Requerimiento 2 en consola
-    """
-    # TODO: Imprimir el resultado del requerimiento 2
-    pass
+    start = input(str("Ingrese el ID del punto origen de la busqueda: "))
+    end = input(str("Ingrese el ID del punto destino de la busqueda: "))
+    delivery_person = input(str("Ingrese el ID del domiciliario: ")) 
 
 
 def print_req_3(control):
     """
         Función que imprime la solución del Requerimiento 3 en consola
     """
-    point_a = input("Ingrese el punto geográfico a consultar (formato lat_lon con 4 decimales(0.0000)): ")
-    
-
-    result = log.req_3(control, point_a)
-
-    print("\n=== Resultados del Requerimiento 3 ===\n")
-
-    if result.get("domiciliary_id") is None:
-        print(f"No se encontraron entregas en la ubicación {point_a}.")
-    else:
-        print(f"Domiciliario con más entregas en {point_a}: {result['domiciliary_id']}")
-        print(f"Total de entregas en ese punto: {result['total_deliveries']}")
-        print(f"Vehículo más utilizado en ese punto: {result['most_used_vehicle']}")
-    
-    print(f"Tiempo de ejecución: {result['execution_time']}\n")
+    # TODO: Imprimir el resultado del requerimiento 3
+    pass
 
 
 def print_req_4(control):
@@ -161,7 +121,11 @@ def print_req_4(control):
 
     print(f"Tiempo de ejecución: {result['execution_time']:.2f} ms")
     print(f"Camino encontrado: {' -> '.join(result['path']) if result['path'] else 'Ninguno'}")
-    print(f"Domiciliarios comunes entre A, B y el camino: {', '.join(result['common_domiciliaries']) if result['common_domiciliaries'] else 'Ninguno'}")
+    if result['common_domiciliaries'] and result['common_domiciliaries']['size'] > 0:
+        common_list = result['common_domiciliaries']['elements']
+        print(f"Domiciliarios comunes entre A, B y el camino: {', '.join(common_list)}")
+    else:
+        print("Domiciliarios comunes entre A, B y el camino: Ninguno")
 
     print("\nRequerimiento 4 ejecutado correctamente.\n")
 
