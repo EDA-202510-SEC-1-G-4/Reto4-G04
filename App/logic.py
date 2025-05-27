@@ -377,12 +377,69 @@ def req_3(catalog, point_a):
     }
 
 
-def req_4(catalog):
-    """
-    Retorna el resultado del requerimiento 4
-    """
-    # TODO: Modificar el requerimiento 4
-    pass
+def req_4(catalog, point_a, point_b):
+    start = get_time()
+
+    if not G.contains_vertex(catalog['graph'], point_a) or not G.contains_vertex(catalog['graph'], point_b):
+        return {
+            'execution_time': delta_time(start, get_time()),
+            'path': [],
+            'common_domiciliaries': [],
+            'message': 'Uno o ambos puntos no existen en el grafo.'
+        }
+
+    search = bfs.bfs(catalog['graph'], point_a)
+    if not has_path_to(search, point_b):
+        return {
+            'execution_time': delta_time(start, get_time()),
+            'path': [],
+            'common_domiciliaries': [],
+            'message': 'No hay camino entre los dos puntos.'
+        }
+
+    path = path_to(search, point_b)
+
+    # Crear mapas para domiciliarios en A y B
+    domis_a = mp.new_map(50)
+    domis_b = mp.new_map(50)
+
+    for delivery in catalog['deliveries']['elements']:
+        if delivery['origin'] == point_a or delivery['destination'] == point_a:
+            mp.put(domis_a, delivery['person_id'], True)
+        if delivery['origin'] == point_b or delivery['destination'] == point_b:
+            mp.put(domis_b, delivery['person_id'], True)
+
+    # Encontrar candidatos comunes
+    candidatos = mp.new_map(50)
+    for pair in domis_a['table']['elements']:
+        if pair and pair['key'] is not None:
+            if mp.contains(domis_b, pair['key']):
+                mp.put(candidatos, pair['key'], True)
+
+    # Buscar domiciliarios que recorren el camino
+    domis_en_camino = mp.new_map(100)
+    for i in range(len(path) - 1):
+        u = path[i]
+        v = path[i + 1]
+        for delivery in catalog['deliveries']['elements']:
+            if (delivery['origin'] == u and delivery['destination'] == v) or \
+               (delivery['origin'] == v and delivery['destination'] == u):
+                mp.put(domis_en_camino, delivery['person_id'], True)
+
+    # Intersección final
+    domis_comunes = al.new_list()
+    for pair in candidatos['table']['elements']:
+        if pair and pair['key'] is not None:
+            if mp.contains(domis_en_camino, pair['key']):
+                al.add_last(domis_comunes, pair['key'])
+
+    end = get_time()
+    return {
+        'execution_time': delta_time(start, end),
+        'path': path,
+        'common_domiciliaries': domis_comunes,
+        'message': 'Camino encontrado exitosamente.'
+    }
 
 
 def req_5(catalog):
