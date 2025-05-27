@@ -10,9 +10,8 @@ def new_graph(order=0,duro=True):
     return graph
 
 def insert_vertex(graph,key,info):
-    if key != None and graph != None:
-        nodo = vertex.new_vertex(key,info)
-        graph['vertices'] = mp.put(graph['vertices'],key,nodo)
+    nodo = vertex.new_vertex(key,info)
+    graph['vertices'] = mp.put(graph['vertices'],key,nodo)
     return graph
 
 def update_vertex_info(graph,key,info): #da.rincon
@@ -40,8 +39,6 @@ def add_edge(graph, key_u, key_v, weight=1.0):#ncastano que hizo
         raise Exception("El vertice no existe")
 
     vert_u = mp.get(graph['vertices'], key_u)
-    if isinstance(vert_u, tuple):  # Protección extra
-        vert_u = vert_u[1]
 
     existe = mp.contains(vert_u['adjacents'], key_v)
 
@@ -73,16 +70,15 @@ def degree(graph,key_u):
     return retorno
 
 def get_edge(graph, key_u, key_v):
-    if key_u not in graph['vertices']:
-        raise Exception("El vertice u no existe")
+    res = None 
+    if key_u  in graph['vertices']:
+        vertex_u = graph['vertices'][key_u]
     
-    vertex_u = graph['vertices'][key_u]
+        for edge in vertex_u['out_edges']:
+            if edge['target'] == key_v:
+                res = edge
     
-    for edge in vertex_u['out_edges']:
-        if edge['target'] == key_v:
-            return edge
-    
-    return None
+    return res
 
 def get_vertex_information(graph, key_u):
     vertex = mp.get(graph["vertices"], key_u)
