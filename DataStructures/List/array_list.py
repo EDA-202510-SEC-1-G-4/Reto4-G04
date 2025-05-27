@@ -8,6 +8,13 @@ def new_list():
     }
     return newlist
 
+def contains(list,element):
+    lista = list['elements']
+    res = False
+    if element in lista:
+        res = True
+    return res
+
 def add_first(list, element):
     list['elements'].insert(0, element)
     list['size'] += 1
