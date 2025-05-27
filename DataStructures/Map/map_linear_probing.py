@@ -37,22 +37,26 @@ def is_available(table, pos):
    return False
 
 def find_slot(my_map, key, hash_value):
-   first_avail = None
-   found = False
-   ocupied = False
-   while not found:
+    first_avail = None
+    found = False
+    ocupied = False
+    for _ in range(my_map['capacity']*2):
       if is_available(my_map["table"], hash_value):
-            if first_avail is None:
+            if first_avail == None:
                first_avail = hash_value
             entry = al.get_element(my_map["table"], hash_value)
             if me.get_key(entry) is None:
-               found = True
+               break
       elif default_compare(key, al.get_element(my_map["table"], hash_value)) == 0:
             first_avail = hash_value
-            found = True
             ocupied = True
+            break
       hash_value = (hash_value + 1) % my_map["capacity"]
-   return ocupied, first_avail
+    
+    if first_avail == None:
+       ocupied = True
+       first_avail = hash_value
+    return ocupied, first_avail
 
 def rehash(my_map):
     new_capacity = mp.next_prime(my_map["capacity"] * 2)

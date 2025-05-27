@@ -29,7 +29,6 @@ def new_logic():
         'total_delivery_time': 0.0,
         'total_deliveries': 0,
         'load_time': 0.0,
-        'total_edges': 0
     }
     return catalog
 
@@ -113,7 +112,6 @@ def load_data(catalog, filename):
         if edge is None:
             catalog['graph'] = G.add_edge(catalog['graph'], origin, destination, time_taken)
             catalog['graph'] = G.add_edge(catalog['graph'], destination, origin, time_taken)
-            catalog['total_edges'] += 1
         else:
             avg = (edge['weight'] + time_taken) / 2
             catalog['graph'] = G.add_edge(catalog['graph'], origin, destination, avg)
@@ -146,6 +144,7 @@ def load_data(catalog, filename):
     catalog['avg_delivery_time'] = catalog['total_delivery_time'] / catalog['total_deliveries']
     catalog['total_restaurants'] = al.size(catalog['restaurant_locations'])
     catalog['total_delivery_locations'] = al.size(catalog['delivery_locations'])
+    catalog['total_edges'] = G.size(catalog['graph'])
 
     return catalog
 
