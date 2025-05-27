@@ -114,13 +114,11 @@ def load_data(catalog, filename):
 
         # Arcos principales (origen <-> destino)
         edge = G.get_edge(catalog['graph'], origin, destination)
-        if edge is None:
-            catalog['graph'] = G.add_edge(catalog['graph'], origin, destination, time_taken)
-            catalog['graph'] = G.add_edge(catalog['graph'], destination, origin, time_taken)
-        else:
-            avg = (edge['weight'] + time_taken) / 2
-            catalog['graph'] = G.add_edge(catalog['graph'], origin, destination, avg)
-            catalog['graph'] = G.add_edge(catalog['graph'], destination, origin, avg)
+        avg = time_taken
+        if edge != None:
+            avg = (edge['weight'] + time_taken)/2
+        catalog['graph'] = G.add_edge(catalog['graph'], origin, destination, avg)
+        catalog['graph'] = G.add_edge(catalog['graph'], destination, origin, avg)
 
         # Conexión entre entregas consecutivas del mismo domiciliario
         prev_dest = mp.get(catalog['domiciliarios_ultimos_destinos'], person_id)
