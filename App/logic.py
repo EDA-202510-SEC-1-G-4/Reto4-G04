@@ -5,6 +5,11 @@ from DataStructures.Graph import digraph as G
 from DataStructures.Map import map_linear_probing as mp
 from DataStructures.List import array_list as al
 from DataStructures.Graph import edge as edg  
+from DataStructures.Graph import bfs
+from DataStructures.Queue import queue as q
+from DataStructures.Stack import stack as s
+
+
 
 csv.field_size_limit(2147483647)
 data_dir = os.path.dirname(os.path.realpath('__file__')) + '/Data/'
@@ -156,13 +161,120 @@ def get_data(catalog, id):
     pass
 
 
-def req_1(catalog):
-    """
-    Retorna el resultado del requerimiento 1
-    """
-    # TODO: Modificar el requerimiento 1
-    pass
+def req_1(catalog, point_a, point_b):
+    
+    
+    start_time = get_time()
+    
+    
+    if not G.contains_vertex(catalog['graph'], point_a):
+        return {
+            'execution_time': delta_time(start_time, get_time()),
+            'path_length': 0,
+            'path': [],
+            'delivery_persons': [],
+            'restaurants': [],
+            'message': f"El punto de origen {point_a} no existe en el grafo"
+        }
+        
+    if not G.contains_vertex(catalog['graph'], point_b):
+        return {
+            'execution_time': delta_time(start_time, get_time()),
+            'path_length': 0,
+            'path': [],
+            'delivery_persons': [],
+            'restaurants': [],
+            'message': f"El punto de destino {point_b} no existe en el grafo"
+        }
+    
+    # Ejecutar BFS desde el punto A
+    search = bfs(catalog['graph'], point_a)
+    
+    # Verificar si existe camino
+    if not has_path_to(search, point_b):
+        return {
+            'execution_time': delta_time(start_time, get_time()),
+            'path_length': 0,
+            'path': [],
+            'delivery_persons': [],
+            'restaurants': [],
+            'message': 'No existe camino entre las ubicaciones especificadas'
+        }
+    
+    # Obtener el camino como pila y convertir a lista
+    path_stack = path_to(search, point_b)
+    path = []
+    while not s.is_empty(path_stack):
+        path.append(s.pop(path_stack))
+    
+  
+    delivery_persons = set()
+    restaurants = []
+    
+    
+    for i in range(len(path)-1):
+        current_node = path[i]
+        next_node = path[i+1]
+        
+        # Buscar todas las entregas que pasan por este arco
+        for delivery in catalog['deliveries']['elements']:
+            if (delivery['origin'] == current_node and delivery['destination'] == next_node) or \
+               (delivery['origin'] == next_node and delivery['destination'] == current_node):
+                delivery_persons.add(delivery['person_id'])
+        
+        # Verificar si el nodo actual es un restaurante
+        if al.contains(catalog['restaurant_locations'], current_node):
 
+            
+            restaurants.append(current_node)
+    
+    # Verificar el último nodo por si es restaurante
+    if al.contains(catalog['restaurant_locations'], path[-1]):
+        restaurants.append(path[-1])
+    
+    
+    unique_restaurants = []
+    seen_restaurants = set()
+    for rest in restaurants:
+        if rest not in seen_restaurants:
+            unique_restaurants.append(rest)
+            seen_restaurants.add(rest)
+    
+    end_time = get_time()
+    
+    return {
+        'execution_time': delta_time(start_time, end_time),
+        'path_length': len(path),
+        'path': path,
+        'delivery_persons': list(delivery_persons),
+        'restaurants': unique_restaurants,
+        'message': 'Camino encontrado exitosamente'
+        
+    }
+    
+def has_path_to(search, vertex):
+    """
+    Verifica si hay camino desde el origen hasta el vértice
+    """
+    return mp.contains(search['visited'], vertex)
+
+def path_to(search, vertex):
+    """
+    Retorna una pila con el camino desde el origen hasta el vértice
+    """
+    if not has_path_to(search, vertex):
+        return None
+
+    path = s.new_stack()
+    current = vertex
+
+    while current != search['source']:
+        s.push(path, current)
+        current = mp.get(search['visited'], current)['edge_to']
+
+    s.push(path, search['source'])
+    return path
+    
 
 def req_2(catalog):
     """
