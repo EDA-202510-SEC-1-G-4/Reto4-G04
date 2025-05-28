@@ -42,7 +42,7 @@ def load_data(control):
     """
 
     # Solicitar al usuario el tamaño del archivo a cargar
-    filename = "deliverytime_20.csv"
+    filename = "deliverytime_40.csv"
 
     # Cargar los datos
     stats = log.load_data(control, filename)
@@ -196,11 +196,23 @@ def print_req_6(control):
 
 
 def print_req_7(control):
-    """
-        Función que imprime la solución del Requerimiento 7 en consola
-    """
-    # TODO: Imprimir el resultado del requerimiento 7
-    pass
+    print("\n  Requerimiento 7: Subred MST para un domiciliario")
+
+    ubicacion = input("Ingrese la ubicación inicial (ej. '12.9716_77.5946'): ").strip()
+    domiciliario = input("Ingrese el ID del domiciliario: ").strip()
+
+    resultado = log.req_7(control, ubicacion, domiciliario)
+
+    print("\nResultado del requerimiento 7:\n")
+    print(f"  Tiempo de ejecución: {resultado['execution_time']:.2f} ms")
+    print(f" Total de ubicaciones en la subred: {resultado['total_vertices']}")
+    if resultado["locations"]:
+        print(f" Ubicaciones (ordenadas alfabéticamente):")
+        for loc in resultado["locations"]:
+            print(f"   - {loc}")
+    else:
+        print(" No se encontraron ubicaciones conectadas en la subred.")
+    print(f" Peso total del Árbol de Recubrimiento Mínimo: {resultado['total_weight']:.2f}")
 
 
 def print_req_8(control):

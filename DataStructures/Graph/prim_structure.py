@@ -27,33 +27,35 @@ def prim_mst(my_graph, source):
     ipq.insert(search["pq"], 0, source)
 
     while not ipq.is_empty(search["pq"]):
-        v = ipq.remove(search["pq"])
-        mp.put(search["marked"], v, True)
+        current = ipq.remove(search["pq"])
+        mp.put(search["marked"], current, True)
 
-        vertex = mp.get(my_graph["vertices"], v)
-        adj = vertex["adjacents"]
-        keys = mp.key_set(adj)
-        for j in range(al.size(keys)):
-            w = al.get_element(keys, j)
-            edge = mp.get(adj, w)
-            weight = edge["weight"]
+        current_vertex = mp.get(my_graph["vertices"], current)
+        adjacents = current_vertex["adjacents"]
+        neighbors = mp.key_set(adjacents)
 
-            if mp.get(search["marked"], w):
+        for j in range(al.size(neighbors)):
+            neighbor = al.get_element(neighbors, j)
+            if mp.get(search["marked"], neighbor):
                 continue
 
-            if weight < mp.get(search["dist_to"], w):
-                mp.put(search["edge_to"], w, {"vertexA": v, "vertexB": w, "weight": weight})
-                mp.put(search["dist_to"], w, weight)
-                if ipq.contains(search["pq"], w):
-                    ipq.decrease_key(search["pq"], w, weight)
+            edge = mp.get(adjacents, neighbor)
+            weight = edge["weight"]
+            current_dist = mp.get(search["dist_to"], neighbor)
+
+            if weight is not None and weight < current_dist:
+                mp.put(search["dist_to"], neighbor, weight)
+                mp.put(search["edge_to"], neighbor, {"vertexA": current, "vertexB": neighbor, "weight": weight})
+                if ipq.contains(search["pq"], neighbor):
+                    ipq.decrease_key(search["pq"], neighbor, weight)
                 else:
-                    ipq.insert(search["pq"], weight, w)
+                    ipq.insert(search["pq"], weight, neighbor)
 
     return search
 
 
 def edges_mst(my_graph, search):
-    mst = q.new_queue()
+    mst = qu.new_queue()
     keys = mp.key_set(search["edge_to"])
     for i in range(al.size(keys)):
         key = al.get_element(keys, i)
@@ -68,5 +70,20 @@ def weight_mst(my_graph, search):
     for i in range(al.size(keys)):
         key = al.get_element(keys, i)
         edge = mp.get(search["edge_to"], key)
-        total_weight += edge["weight"]
+        weight = edge["weight"]
+        if weight is not None:
+            total_weight += weight
     return total_weight
+
+
+def num_vertices(search):
+    """
+    Retorna el número de vértices en el MST construido por Prim.
+
+    :param search: La estructura retornada por Prim
+    :type search: dict
+
+    :return: Número de vértices conectados en el MST
+    :rtype: int
+    """
+    return mp.size(search["edge_to"]) + 1  # +1 para incluir el vértice fuente
