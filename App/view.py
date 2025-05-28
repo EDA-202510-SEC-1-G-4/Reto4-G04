@@ -89,58 +89,6 @@ def print_req_1(control):
 
 
 def print_req_2(control):
-<<<<<<< HEAD
-    """Función que imprime la solución del Requerimiento 2 en consola"""
-    print("\n" + "="*50)
-    print("Requerimiento 2: Camino para domiciliario específico")
-    print("="*50)
-    
-    # Obtener parámetros del usuario
-    print("\nIngrese las coordenadas del punto de origen:")
-    lat_a = input("Latitud: ").strip()
-    lon_a = input("Longitud: ").strip()
-    
-    print("\nIngrese las coordenadas del punto de destino:")
-    lat_b = input("Latitud: ").strip()
-    lon_b = input("Longitud: ").strip()
-    
-    print("\nIngrese el ID del domiciliario:")
-    delivery_person = input("ID: ").strip()
-    
-    # Formatear coordenadas
-    point_a = create_node_id(lat_a, lon_a)
-    point_b = create_node_id(lat_b, lon_b)
-    
-    # Ejecutar requerimiento
-    result = log.req_2(control, point_a, point_b, delivery_person)
-    
-    # Mostrar resultados
-    print("\n" + "="*50)
-    print("Resultados Requerimiento 2")
-    print("="*50)
-    print(f"Tiempo ejecución: {result['execution_time']:.2f} ms")
-    print(f"Mensaje: {result['message']}")
-    
-    if result['path_length'] > 0:
-        print(f"\nTotal nodos en camino: {result['path_length']}")
-        print("\nSecuencia de ubicaciones:")
-        for i, node in enumerate(result['path'], 1):
-            print(f"{i}. {node}")
-        
-        print("\nDomiciliario asignado:")
-        print(f"- {result['delivery_persons'][0]}")
-        
-        if result['restaurants']:
-            print("\nRestaurantes en el camino:")
-            for i, rest in enumerate(result['restaurants'], 1):
-                print(f"{i}. {rest}")
-        else:
-            print("\nNo hay restaurantes en este camino")
-    
-    print("="*50 + "\n")
-
-
-=======
     start = input(str("Ingrese el ID del punto origen de la busqueda: "))
     end = input(str("Ingrese el ID del punto destino de la busqueda: "))
     delivery_person = input(str("Ingrese el ID del domiciliario: ")) 
@@ -150,7 +98,6 @@ def print_req_2(control):
                ["Camino mas corto",shortest_path],
                ["Restaurantes encontrados",restaurants_found]]
     print(tabulate(retorno,headers=["Dato","Valor"],tablefmt='grid'))
->>>>>>> a2f8da04fbc7d9cf6008ce76aca5c4d874aa30aa
 
 def print_req_3(control):
     """

@@ -663,15 +663,6 @@ def req_6(catalog, start):
 
     return execution_time,total_locations,sorted_locations['elements'],longest_path,max_time
 
-    # 4. Retornar información en el formato esperado
-    # return {
-    #     "execution_time": execution_time,
-    #     "total_locations": al.size(sorted_locations),
-    #     "reachable_locations": sorted_locations["elements"],
-    #     "longest_path": longest_path,  # `longest_path` ya es una lista ordenada
-    #     "longest_path_time": max_time
-    # }
-
 
 def req_7(catalog):
     """
