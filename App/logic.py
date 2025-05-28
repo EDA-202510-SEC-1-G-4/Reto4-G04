@@ -10,6 +10,7 @@ from DataStructures.Graph import dfs as dfs
 from DataStructures.Graph import dijsktra_search as dj
 from DataStructures.Queue import queue as q
 from DataStructures.Stack import stack as s
+from DataStructures.Graph import prim_structure as prim
 import math
 
 
@@ -663,13 +664,87 @@ def req_6(catalog, start):
 
     return execution_time,total_locations,sorted_locations['elements'],longest_path,max_time
 
+def ubicaciones_domiciliario(catalog, domiciliario):
+    ubicaciones = mp.new_map(10)  # clave: ubicación, valor: True
+    deliveries = catalog["deliveries"]
+    
+    for delivery in deliveries["elements"]:
+        
+        dom = delivery["person_id"].strip()
+        if dom == domiciliario:
+            origin = delivery["origin"].strip()
+            destino = delivery["destination"].strip()
+            if not mp.contains(ubicaciones,origin):
+                mp.put(ubicaciones, origin, True)
+            if not mp.contains(ubicaciones,destino):
+                mp.put(ubicaciones, destino, True)
 
-def req_7(catalog):
-    """
-    Retorna el resultado del requerimiento 7
-    """
-    # TODO: Modificar el requerimiento 7
-    pass
+    return ubicaciones
+
+def crear_grafo_auxiliar(catalog, ubicaciones_filtradas):
+    grafo_original = catalog["graph"]
+    grafo_aux = G.new_graph()
+
+    # Agregar solo los vértices filtrados
+    keys = mp.key_set(ubicaciones_filtradas)
+    for key in keys["elements"]:
+        G.insert_vertex(grafo_aux, key, True)
+
+    # Agregar aristas solo si ambos extremos están en el conjunto
+   
+    for u in keys["elements"]:
+        if G.contains_vertex(grafo_original,u):
+            adj = G.adjacents(grafo_original, u)
+            if adj["elements"]:
+                for adj in adj["elements"]:
+                    if mp.contains(ubicaciones_filtradas, adj):
+                        peso = G.get_edge(grafo_original,u,adj)
+                        G.add_edge(grafo_aux, u, adj, peso)
+
+    return grafo_aux
+
+
+def req_7(catalog, ubicacion_inicial, domicilio_id):
+    start_time = get_time()
+
+    # Paso 1: Filtrar ubicaciones del domiciliario
+    ubicaciones = ubicaciones_domiciliario(catalog, domicilio_id)
+    
+    # Asegurar que la ubicación inicial esté en el conjunto
+    if not mp.contains(ubicaciones, ubicacion_inicial):
+        mp.put(ubicaciones, ubicacion_inicial, True)
+
+    # Paso 2: Crear grafo auxiliar dirigido con esas ubicaciones
+    grafo_aux = crear_grafo_auxiliar(catalog, ubicaciones)
+
+    # Paso 3: Ejecutar Prim desde la ubicación inicial
+    mst = prim.prim_mst(grafo_aux, ubicacion_inicial)
+
+    # Paso 4: Obtener info del MST
+    total_weight = prim.weight_mst(grafo_aux, mst)
+    edges = prim.edges_mst(grafo_aux, mst)
+    vertex_set = mp.new_map(20)
+
+    while not q.is_empty(edges):
+        edge = q.dequeue(edges)
+        mp.put(vertex_set, edge["vertexA"], True)
+        mp.put(vertex_set, edge["vertexB"], True)
+
+    # Total de ubicaciones
+    total_vertices = mp.size(vertex_set)
+
+    # Ordenar identificadores alfabéticamente
+    keys = mp.key_set(vertex_set)["elements"]
+    sorted_locations = sorted(keys)
+
+    end_time = get_time()
+
+    return {
+        "execution_time": delta_time(start_time, end_time),
+        "total_vertices": total_vertices,
+        "locations": sorted_locations,
+        "total_weight": total_weight
+    }
 
 
 def req_8(catalog):

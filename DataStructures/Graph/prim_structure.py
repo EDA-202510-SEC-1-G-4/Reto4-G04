@@ -31,23 +31,25 @@ def prim_mst(my_graph, source):
         mp.put(search["marked"], v, True)
 
         vertex = mp.get(my_graph["vertices"], v)
-        adj = vertex["adjacents"]
-        keys = mp.key_set(adj)
-        for j in range(al.size(keys)):
-            w = al.get_element(keys, j)
-            edge = mp.get(adj, w)
-            weight = edge["weight"]
+        
+        if vertex is not None:
+            adj = vertex["adjacents"]
+            keys = mp.key_set(adj)
+            for j in range(al.size(keys)):
+                w = al.get_element(keys, j)
+                edge = mp.get(adj, w)
+                weight = edge["weight"]
 
-            if mp.get(search["marked"], w):
-                continue
+                if mp.get(search["marked"], w):
+                    continue
 
-            if weight < mp.get(search["dist_to"], w):
-                mp.put(search["edge_to"], w, {"vertexA": v, "vertexB": w, "weight": weight})
-                mp.put(search["dist_to"], w, weight)
-                if ipq.contains(search["pq"], w):
-                    ipq.decrease_key(search["pq"], w, weight)
-                else:
-                    ipq.insert(search["pq"], weight, w)
+                if weight < mp.get(search["dist_to"], w):
+                    mp.put(search["edge_to"], w, {"vertexA": v, "vertexB": w, "weight": weight})
+                    mp.put(search["dist_to"], w, weight)
+                    if ipq.contains(search["pq"], w):
+                        ipq.decrease_key(search["pq"], w, weight)
+                    else:
+                        ipq.insert(search["pq"], weight, w)
 
     return search
 
@@ -70,3 +72,16 @@ def weight_mst(my_graph, search):
         edge = mp.get(search["edge_to"], key)
         total_weight += edge["weight"]
     return total_weight
+
+
+def num_vertices(mst):
+    """
+    Retorna el número de vértices en el MST construido por Prim.
+
+    :param mst: La estructura retornada por Prim
+    :type mst: dict
+
+    :return: Número de vértices conectados en el MST
+    :rtype: int
+    """
+    return mp.size(mst["mst"])
