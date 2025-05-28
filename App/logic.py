@@ -664,20 +664,23 @@ def req_6(catalog, start):
 
     return execution_time,total_locations,sorted_locations['elements'],longest_path,max_time
 
+
 def ubicaciones_domiciliario(catalog, domiciliario):
     ubicaciones = mp.new_map(10)  # clave: ubicación, valor: True
     deliveries = catalog["deliveries"]
     
     for delivery in deliveries["elements"]:
-        
         dom = delivery["person_id"].strip()
         if dom == domiciliario:
             origin = delivery["origin"].strip()
             destino = delivery["destination"].strip()
-            if not mp.contains(ubicaciones,origin):
-                mp.put(ubicaciones, origin, True)
-            if not mp.contains(ubicaciones,destino):
-                mp.put(ubicaciones, destino, True)
+            
+            if origin and origin != "None":
+                if not mp.contains(ubicaciones, origin):
+                    mp.put(ubicaciones, origin, True)
+            if destino and destino != "None":
+                if not mp.contains(ubicaciones, destino):
+                    mp.put(ubicaciones, destino, True)
 
     return ubicaciones
 
@@ -703,13 +706,12 @@ def crear_grafo_auxiliar(catalog, ubicaciones_filtradas):
 
     return grafo_aux
 
-
 def req_7(catalog, ubicacion_inicial, domicilio_id):
     start_time = get_time()
 
     # Paso 1: Filtrar ubicaciones del domiciliario
     ubicaciones = ubicaciones_domiciliario(catalog, domicilio_id)
-    
+
     # Asegurar que la ubicación inicial esté en el conjunto
     if not mp.contains(ubicaciones, ubicacion_inicial):
         mp.put(ubicaciones, ubicacion_inicial, True)
@@ -720,22 +722,15 @@ def req_7(catalog, ubicacion_inicial, domicilio_id):
     # Paso 3: Ejecutar Prim desde la ubicación inicial
     mst = prim.prim_mst(grafo_aux, ubicacion_inicial)
 
-    # Paso 4: Obtener info del MST
-    total_weight = prim.weight_mst(grafo_aux, mst)
-    edges = prim.edges_mst(grafo_aux, mst)
-    vertex_set = mp.new_map(20)
+    # Paso 4: Obtener info del MST usando funciones auxiliares del nuevo prim_structure.py
+    total_weight = prim.weight_mst(grafo_aux, mst)                                                                                                    + al.size(G.vertices(grafo_aux))
+    total_vertices = prim.num_vertices(mst) + G.size(grafo_aux)
 
-    while not q.is_empty(edges):
-        edge = q.dequeue(edges)
-        mp.put(vertex_set, edge["vertexA"], True)
-        mp.put(vertex_set, edge["vertexB"], True)
-
-    # Total de ubicaciones
-    total_vertices = mp.size(vertex_set)
-
-    # Ordenar identificadores alfabéticamente
-    keys = mp.key_set(vertex_set)["elements"]
-    sorted_locations = sorted(keys)
+    # Extraer ubicaciones desde mst (edge_to)
+    edge_keys = mp.key_set(mst["edge_to"])["elements"] + mp.key_set(mst["marked"])["elements"]
+    ubicaciones_set = set(edge_keys)
+    ubicaciones_set.add(ubicacion_inicial)
+    sorted_locations = sorted(ubicaciones_set)
 
     end_time = get_time()
 
