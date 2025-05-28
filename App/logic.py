@@ -255,54 +255,66 @@ def path_to(search, vertex):
     
 
 def req_2(catalog, start, end, delivery_person):
-    graph = catalog['graph']
+    original_graph = catalog['graph']
     filtered_graph = G.new_graph()
 
-    # 1. Filtrar vértices visitados por el domiciliario
-    for location in G.vertices(graph)['elements']:
-        node = mp.get(graph['vertices'], location)
-        if node and al.contains(node['value'], delivery_person):
-            G.insert_vertex(filtered_graph, location, node)
+    # 1. Crear un nuevo grafo solo con los nodos visitados por el domiciliario
+    for location in catalog['graph']['vertices']:
+        if location is None:
+            continue
+        node = location['value']
+        if al.contains(node, delivery_person):
+            filtered_graph = G.insert_vertex(filtered_graph, location, node['elements'])
 
-    # 2. Agregar solo los arcos entre ubicaciones válidas (dentro del grafo filtrado)
-    for location in G.vertices(filtered_graph)['elements']:
-        for adj in G.adjacents(graph, location)['elements']:
-            if G.contains_vertex(filtered_graph, adj):
-                edge = G.get_edge(graph, location, adj)
-                if edge:
-                    G.add_edge(filtered_graph, location, adj, edge['weight'])
+    # 2. Agregar solo las aristas entre nodos que el domiciliario haya recorrido
+    for delivery in catalog['deliveries']['elements']:
+        if delivery['person_id'] != delivery_person:
+            continue
+        origin = delivery['origin']
+        destination = delivery['destination']
+        weight = delivery['time_taken']
 
-    # 3. Ejecutar DFS desde el punto de inicio
-    search = dfs.dfs(graph, start)
+        if G.contains_vertex(filtered_graph, origin) and G.contains_vertex(filtered_graph, destination):
+            filtered_graph = G.add_edge(filtered_graph, origin, destination, weight)
+            filtered_graph = G.add_edge(filtered_graph, destination, origin, weight)
+
+    # 3. Ejecutar DFS desde el nodo de inicio en el grafo filtrado
+    search = dfs.dfs(filtered_graph, start)
 
     if not has_path_to(search, end):
-        return {"message": "No hay conexión entre las ubicaciones para este domiciliario."}
+        return {
+            "message": "No hay conexión entre las ubicaciones para este domiciliario.",
+            "camino": [],
+            "cantidad_puntos": 0,
+            "domiciliarios": [],
+            "restaurantes_encontrados": [],
+            "tiempo_ejecucion": 0
+        }
 
-    # 4. Reconstruir el camino
-    path_stack = path_to(search, end)
+    # 4. Obtener el camino
+    path = path_to(search, end)
     shortest_path = al.new_list()
-    while not s.is_empty(path_stack):
-        al.add_last(shortest_path, s.pop(path_stack))
+    for location in path:
+        al.add_last(shortest_path, location)
 
-    # 5. Obtener detalles del camino
+    # 5. Obtener datos adicionales del camino
     total_locations = al.size(shortest_path)
     unique_delivery_persons = al.new_list()
     restaurants_found = al.new_list()
 
     for location in shortest_path['elements']:
-        node = mp.get(graph['vertices'], location)
+        node = mp.get(catalog['nodes'], location)
+        if node:
+            for person in node['value']['domiciliarios']['elements']:
+                if not al.contains(unique_delivery_persons, person):
+                    al.add_last(unique_delivery_persons, person)
 
-        # Domiciliarios únicos
-        for person in node['value']['elements']:
-            if not al.contains(unique_delivery_persons, person):
-                al.add_last(unique_delivery_persons, person)
+        if al.contains(catalog["restaurant_locations"], location) and not al.contains(restaurants_found, location):
+            al.add_last(restaurants_found, location)
 
-        # Restaurantes (ubicaciones de origen)
-        if al.contains(catalog['restaurant_locations'], location):
-            if not al.contains(restaurants_found, location):
-                al.add_last(restaurants_found, location)
+    return total_locations, unique_delivery_persons["elements"], shortest_path["elements"], restaurants_found["elements"]
 
-    return total_locations,unique_delivery_persons['elements'],shortest_path['elements'],restaurants_found['elements']
+
 
 
 def req_3(catalog, point_a):

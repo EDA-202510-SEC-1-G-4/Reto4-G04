@@ -92,7 +92,12 @@ def print_req_2(control):
     start = input(str("Ingrese el ID del punto origen de la busqueda: "))
     end = input(str("Ingrese el ID del punto destino de la busqueda: "))
     delivery_person = input(str("Ingrese el ID del domiciliario: ")) 
-
+    total_locations, unique_delivery_persons, shortest_path, restaurants_found = log.req_2(control,start,end,delivery_person)
+    retorno = [["Ubicaciones totales",total_locations],
+               ["Domiciliarios",unique_delivery_persons],
+               ["Camino mas corto",shortest_path],
+               ["Restaurantes encontrados",restaurants_found]]
+    print(tabulate(retorno,headers=["Dato","Valor"],tablefmt='grid'))
 
 def print_req_3(control):
     """
