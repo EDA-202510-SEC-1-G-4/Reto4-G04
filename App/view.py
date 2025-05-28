@@ -2,6 +2,7 @@ import sys
 import csv
 import os
 import time
+import folium
 from tabulate import tabulate
 from DataStructures.Graph import digraph as G
 from DataStructures.Map import map_linear_probing as mp
@@ -203,11 +204,14 @@ def print_req_7(control):
 
 
 def print_req_8(control):
-    """
-        Función que imprime la solución del Requerimiento 8 en consola
-    """
-    # TODO: Imprimir el resultado del requerimiento 8
-    pass
+    origin = str(input("Ingrese el centro de la región de busqueda: "))
+    delivery_person = str(input("Ingrese la ID del domiciliario: "))
+    radius_km = float(input("Ingrese el radio de busqueda: "))
+    retorno = log.req_8(control,origin,radius_km,delivery_person)
+
+    filtered_edges = log.filter_edges(control['graph'], retorno)
+    mapa = log.plot_map(retorno, filtered_edges, origin, radius_km,delivery_person)
+    mapa.save("mapa_recorrido.html")
 
 
 # Se crea la lógica asociado a la vista

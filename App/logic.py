@@ -11,6 +11,7 @@ from DataStructures.Graph import dijsktra_search as dj
 from DataStructures.Queue import queue as q
 from DataStructures.Stack import stack as s
 import math
+import folium
 
 
 
@@ -672,12 +673,73 @@ def req_7(catalog):
     pass
 
 
-def req_8(catalog):
-    """
-    Retorna el resultado del requerimiento 8
-    """
-    # TODO: Modificar el requerimiento 8
-    pass
+def req_8(catalog, origin, radius_km, delivery_person):
+    graph = catalog['graph']
+    lat1, lon1 = map(float, origin.split("_"))
+    filtered_locations = al.new_list()
+
+    for location in G.vertices(graph)["elements"]:  # Iterar sobre todas las ubicaciones en el grafo
+        node = G.get_vertex(graph, location)
+        lat2, lon2 = map(float, location.split("_"))
+        distance = haversine(lat1, lon1, lat2, lon2)
+
+        # Filtrar ubicaciones dentro del radio y que el domiciliario haya visitado
+        if distance <= radius_km and al.contains(node["value"], delivery_person):
+            al.add_last(filtered_locations,location)
+
+    return filtered_locations
+
+def filter_edges(graph, filtered_locations):
+    filtered_edges = al.new_list()
+
+    for location in filtered_locations['elements']:
+        adjacents_list = G.adjacents(graph, location)["elements"]
+        for adj in adjacents_list:
+            if adj in filtered_locations['elements']:  # Solo incluir conexiones entre ubicaciones dentro del radio
+                edge = G.get_edge(graph, location, adj)
+                al.add_last(filtered_edges,(location, adj, edge["weight"]))
+
+    return filtered_edges
+
+def haversine(lat1, lon1, lat2, lon2):
+    R = 6371  # Radio de la Tierra en kilómetros
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat/2) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon/2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    return R * c
+
+def plot_map(filtered_locations, filtered_edges,origin, radius_km,delivery_person):
+    lat1, lon1 = map(float, origin.split("_"))  # Convertir origen a números flotantes
+    m = folium.Map(location=[lat1, lon1], zoom_start=14)
+
+    # Dibujar el área circular
+    folium.Circle([lat1, lon1], radius=radius_km*1000, color="red", fill=True, fill_opacity=0.2).add_to(m)
+
+    # Agregar marcadores de ubicaciones
+    for location in filtered_locations['elements']:
+        lat2, lon2 = map(float, location.split("_"))
+
+        # Marcador especial para la ubicación del domiciliario
+        folium.Marker(
+            location=[lat2, lon2],
+            popup=f"Ubicación: {location}\nDomiciliario: {delivery_person}",
+            icon=folium.Icon(color="blue", icon="home")
+        ).add_to(m)
+
+
+    for edge in filtered_edges['elements']:
+        lat_start, lon_start = map(float, edge[0].split("_"))
+        lat_end, lon_end = map(float, edge[1].split("_"))
+
+        folium.PolyLine(
+            [(lat_start, lon_start), (lat_end, lon_end)],
+            color="green", weight=5, opacity=0.9, tooltip=f"Tiempo: {edge[2]} min"
+        ).add_to(m)
+
+    return m
+
+
 
 
 # Funciones para medir tiempos de ejecucion
