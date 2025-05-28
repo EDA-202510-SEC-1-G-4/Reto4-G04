@@ -255,66 +255,150 @@ def path_to(search, vertex):
     return path
     
 
-def req_2(catalog, start, end, delivery_person):
-    original_graph = catalog['graph']
+
+def error_response(start_time, error_message):
+    """
+    Crea una respuesta estandarizada para errores
+    
+    Args:
+        start_time: Tiempo de inicio de la ejecución (para calcular duración)
+        error_message: Mensaje descriptivo del error
+    
+    Returns:
+        Un diccionario con la estructura estándar de respuesta pero indicando error
+    """
+    return {
+        'execution_time': delta_time(start_time, get_time()),
+        'path_length': 0,
+        'path': [],
+        'delivery_persons': [],
+        'restaurants': [],
+        'message': error_message
+    }   
+def req_2(catalog, point_a, point_b, delivery_person_id):
+    """
+    Implementa el requerimiento 2: Camino con menos puntos intermedios para un domiciliario específico
+    """
+    start_time = get_time()
+    
+    # Verificar que los puntos existen en el grafo principal
+    if not G.contains_vertex(catalog['graph'], point_a):
+        return error_response(start_time, f"El punto de origen {point_a} no existe")
+        
+    if not G.contains_vertex(catalog['graph'], point_b):
+        return error_response(start_time, f"El punto de destino {point_b} no existe")
+    
+    # Verificar que el domiciliario existe
+    if not any(delivery['person_id'] == delivery_person_id for delivery in catalog['deliveries']['elements']):
+        return error_response(start_time, f"Domiciliario {delivery_person_id} no encontrado")
+
+    # Crear grafo filtrado
+    filtered_graph = create_filtered_graph(catalog, delivery_person_id)
+    
+    # Verificar que los puntos existen en el grafo filtrado
+    if not G.contains_vertex(filtered_graph, point_a) or not G.contains_vertex(filtered_graph, point_b):
+        return error_response(start_time, "No hay camino para este domiciliario entre las ubicaciones")
+
+    # Ejecutar DFS en el grafo filtrado (diferente al req1 que usa BFS)
+    search = dfs.dfs(filtered_graph, point_a)
+    
+    if not has_path_to(search, point_b):
+        return error_response(start_time, "No existe camino para este domiciliario")
+
+    # Obtener el camino
+    path = path_to(search, point_b)
+    
+    # Procesar restaurantes en el camino
+    restaurants = []
+    for node in path:
+        # Verificar si es restaurante buscando en restaurant_locations
+        if node in catalog['restaurant_locations']['elements']:  # Acceso correcto a la lista
+            restaurants.append(node)
+    
+    # Eliminar duplicados manteniendo orden
+    unique_restaurants = []
+    seen = set()
+    for rest in restaurants:
+        if rest not in seen:
+            unique_restaurants.append(rest)
+            seen.add(rest)
+    
+    return {
+        'execution_time': delta_time(start_time, get_time()),
+        'path_length': len(path),
+        'path': path,
+        'delivery_persons': [delivery_person_id],
+        'restaurants': unique_restaurants,
+        'message': 'Éxito'
+    }
+
+def create_filtered_graph(catalog, delivery_person_id):
+    """Crea un grafo solo con arcos usados por el domiciliario"""
     filtered_graph = G.new_graph()
+    
+    # Agregar todos los vértices primero
+    all_vertices = G.vertices(catalog['graph'])['elements']  # Acceso correcto a la lista
+    for vertex in all_vertices:
+        G.insert_vertex(filtered_graph, vertex, None)
+    
+    # Agregar solo arcos usados por este domiciliario
+    for delivery in catalog['deliveries']['elements']:  # Acceso correcto a la lista
+        if delivery['person_id'] == delivery_person_id:
+            origin = delivery['origin']
+            dest = delivery['destination']
+            time = delivery['time_taken']
+            
+            if G.contains_vertex(filtered_graph, origin) and G.contains_vertex(filtered_graph, dest):
+                G.add_edge(filtered_graph, origin, dest, time)
+                G.add_edge(filtered_graph, dest, origin, time)
+    
+    return filtered_graph
 
-    # 1. Crear un nuevo grafo solo con los nodos visitados por el domiciliario
-    for location in catalog['graph']['vertices']:
-        if location is None:
-            continue
-        node = location['value']
-        if al.contains(node, delivery_person):
-            filtered_graph = G.insert_vertex(filtered_graph, location, node['elements'])
-
-    # 2. Agregar solo las aristas entre nodos que el domiciliario haya recorrido
+def create_subgraph_for_delivery_person(catalog, delivery_person_id):
+    """
+    Crea un subgrafo que solo contiene arcos utilizados por el domiciliario especificado
+    """
+    subgraph = G.new_graph()
+    
+    # Agregar todos los nodos primero
+    vertices = G.vertices(catalog['graph'])
+    for vertex in vertices['elements']:
+        G.insert_vertex(subgraph, vertex, None)
+    
+    # Agregar solo arcos utilizados por este domiciliario
     for delivery in catalog['deliveries']['elements']:
-        if delivery['person_id'] != delivery_person:
-            continue
-        origin = delivery['origin']
-        destination = delivery['destination']
-        weight = delivery['time_taken']
+        if delivery['person_id'] == delivery_person_id:
+            origin = delivery['origin']
+            destination = delivery['destination']
+            time_taken = delivery['time_taken']
+            
+            # Agregar arco en ambas direcciones (grafo no dirigido)
+            if not G.contains_vertex(subgraph, origin):
+                G.insert_vertex(subgraph, origin, None)
+            if not G.contains_vertex(subgraph, destination):
+                G.insert_vertex(subgraph, destination, None)
+                
+            existing_edge = G.get_edge(subgraph, origin, destination)
+            if existing_edge is None:
+                G.add_edge(subgraph, origin, destination, time_taken)
+                G.add_edge(subgraph, destination, origin, time_taken)
+    
+    return subgraph
 
-        if G.contains_vertex(filtered_graph, origin) and G.contains_vertex(filtered_graph, destination):
-            filtered_graph = G.add_edge(filtered_graph, origin, destination, weight)
-            filtered_graph = G.add_edge(filtered_graph, destination, origin, weight)
-
-    # 3. Ejecutar DFS desde el nodo de inicio en el grafo filtrado
-    search = dfs.dfs(filtered_graph, start)
-
-    if not has_path_to(search, end):
-        return {
-            "message": "No hay conexión entre las ubicaciones para este domiciliario.",
-            "camino": [],
-            "cantidad_puntos": 0,
-            "domiciliarios": [],
-            "restaurantes_encontrados": [],
-            "tiempo_ejecucion": 0
-        }
-
-    # 4. Obtener el camino
-    path = path_to(search, end)
-    shortest_path = al.new_list()
-    for location in path:
-        al.add_last(shortest_path, location)
-
-    # 5. Obtener datos adicionales del camino
-    total_locations = al.size(shortest_path)
-    unique_delivery_persons = al.new_list()
-    restaurants_found = al.new_list()
-
-    for location in shortest_path['elements']:
-        node = mp.get(catalog['nodes'], location)
-        if node:
-            for person in node['value']['domiciliarios']['elements']:
-                if not al.contains(unique_delivery_persons, person):
-                    al.add_last(unique_delivery_persons, person)
-
-        if al.contains(catalog["restaurant_locations"], location) and not al.contains(restaurants_found, location):
-            al.add_last(restaurants_found, location)
-
-    return total_locations, unique_delivery_persons["elements"], shortest_path["elements"], restaurants_found["elements"]
-
+def is_restaurant(catalog, node_id):
+    """
+    Verifica si un nodo es un restaurante buscando en la lista de ubicaciones de restaurantes
+    
+    Args:
+        catalog: El catálogo con los datos cargados
+        node_id: ID del nodo a verificar (formato "lat_lon")
+    
+    Returns:
+        True si el nodo es un restaurante, False en caso contrario
+    """
+    # Convertir el array_list a lista normal para búsqueda más eficiente
+    restaurant_locations = catalog['restaurant_locations']['elements']
+    return node_id in restaurant_locations
 
 
 
