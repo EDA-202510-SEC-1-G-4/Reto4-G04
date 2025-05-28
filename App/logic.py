@@ -7,6 +7,7 @@ from DataStructures.List import array_list as al
 from DataStructures.Graph import edge as edg  
 from DataStructures.Graph import bfs as bfs
 from DataStructures.Graph import dfs as dfs
+from DataStructures.Graph import dijsktra_search as dj
 from DataStructures.Queue import queue as q
 from DataStructures.Stack import stack as s
 import math
@@ -246,7 +247,7 @@ def path_to(search, vertex):
 
     while current != search["source"]:
         path.append(current)
-        current = mp.get(search["visited"], current)["edge_to"]
+        current = mp.get(search['edge_to'], current)
 
     path.append(search["source"])
     path.reverse()  # Para que el camino quede en orden desde el origen hasta el destino
@@ -542,18 +543,50 @@ def req_5(catalog, point_a, n_changes):
         'message': 'Análisis completado exitosamente.'
     }
 
+import time
 
+def req_6(catalog, start):
+    graph = catalog['graph']
+    start_time = time.time()  # ⏳ Iniciar medición del tiempo
 
+    # 1. Ejecutar Dijkstra en el grafo desde la ubicación inicial
+    search = dj.dijkstra(graph, start)
 
+    if search is None:
+        return {"message": "No hay caminos disponibles desde la ubicación dada."}
+
+    # 2. Extraer ubicaciones alcanzables y ordenarlas alfabéticamente
+    reachable_locations = al.new_list()
+    for location in mp.key_set(search["dist_to"])["elements"]:
+        if has_path_to(search,location):  # Solo considerar ubicaciones alcanzables
+            al.add_last(reachable_locations, location)
+
+    sorted_locations = al.merge_sort(reachable_locations, al.default_sort_criteria)  # Ordenar ubicaciones
+
+    # 3. Identificar el camino de mayor tiempo desde 'start'
+    longest_path = None
+    max_time = float('-inf')
     
+    for location in sorted_locations["elements"]:
+        time_cost = dj.dist_to(location, search)
+        if time_cost > max_time:
+            max_time = time_cost
+            longest_path = path_to(search, location)  # Ahora se obtiene como lista directamente
 
+    end_time = time.time()  # ⏳ Finalizar medición del tiempo
+    execution_time = round(end_time - start_time, 4)
+    total_locations = al.size(sorted_locations)
 
-def req_6(catalog):
-    """
-    Retorna el resultado del requerimiento 6
-    """
-    # TODO: Modificar el requerimiento 6
-    pass
+    return execution_time,total_locations,sorted_locations['elements'],longest_path,max_time
+
+    # 4. Retornar información en el formato esperado
+    # return {
+    #     "execution_time": execution_time,
+    #     "total_locations": al.size(sorted_locations),
+    #     "reachable_locations": sorted_locations["elements"],
+    #     "longest_path": longest_path,  # `longest_path` ya es una lista ordenada
+    #     "longest_path_time": max_time
+    # }
 
 
 def req_7(catalog):

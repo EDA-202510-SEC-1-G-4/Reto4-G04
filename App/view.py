@@ -178,11 +178,20 @@ def print_req_5(control):
 
 
 def print_req_6(control):
-    """
-        Función que imprime la solución del Requerimiento 6 en consola
-    """
-    # TODO: Imprimir el resultado del requerimiento 6
-    pass
+    punto_geografico = input(str("Ingrese el punto geográfico de origen (*latitud*_*longitud*): "))
+    execution_time,total_locations,sorted_locations,longest_path,max_time = log.req_6(control,punto_geografico)
+    retorno = [["Tiempo de ejecución",execution_time],
+               ["Ubicaciones totales",total_locations],
+               ["Camino mas largo",longest_path],
+               ["Tiempo máximo",max_time]]
+    alcanzables = sorted_locations[:5]+sorted_locations[-5:]
+    retorno_alcanzables = []
+    for i in range(len(alcanzables)):
+        alcanzable = [f"Ubicación #{i}",alcanzables[i]]
+        retorno_alcanzables.append(alcanzable)
+    print("\n",tabulate(retorno,headers=["Dato","Valor"],tablefmt="grid"))
+    print("\n","Ubicaciones alcanzables (primeras y ultimas 5):")
+    print("\n",tabulate(retorno_alcanzables,headers=['','Ubicación'],tablefmt='grid'))
 
 
 def print_req_7(control):
