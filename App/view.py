@@ -89,6 +89,7 @@ def print_req_1(control):
 
 
 def print_req_2(control):
+<<<<<<< HEAD
     """Función que imprime la solución del Requerimiento 2 en consola"""
     print("\n" + "="*50)
     print("Requerimiento 2: Camino para domiciliario específico")
@@ -139,6 +140,17 @@ def print_req_2(control):
     print("="*50 + "\n")
 
 
+=======
+    start = input(str("Ingrese el ID del punto origen de la busqueda: "))
+    end = input(str("Ingrese el ID del punto destino de la busqueda: "))
+    delivery_person = input(str("Ingrese el ID del domiciliario: ")) 
+    total_locations, unique_delivery_persons, shortest_path, restaurants_found = log.req_2(control,start,end,delivery_person)
+    retorno = [["Ubicaciones totales",total_locations],
+               ["Domiciliarios",unique_delivery_persons],
+               ["Camino mas corto",shortest_path],
+               ["Restaurantes encontrados",restaurants_found]]
+    print(tabulate(retorno,headers=["Dato","Valor"],tablefmt='grid'))
+>>>>>>> a2f8da04fbc7d9cf6008ce76aca5c4d874aa30aa
 
 def print_req_3(control):
     """

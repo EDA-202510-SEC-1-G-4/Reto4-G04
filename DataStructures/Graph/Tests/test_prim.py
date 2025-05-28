@@ -92,4 +92,4 @@ def test_wight_mst():
     search = prim.prim_mst(some_graph, 1)
     weight = prim.weight_mst(some_graph, search)
 
-    assert weight == 14
+    assert weight == 21

@@ -75,9 +75,20 @@ def load_data(catalog, filename):
 
         # Asegurar que los nodos existen
         if not G.contains_vertex(catalog['graph'], origin):
-            catalog['graph'] = G.insert_vertex(catalog['graph'], origin, al.new_list())
+            doms = al.new_list()
+            al.add_last(doms,person_id)
+            catalog['graph'] = G.insert_vertex(catalog['graph'], origin, doms)
+        else:
+            node_doms = G.get_vertex_information(catalog['graph'],origin)
+            al.add_last(node_doms,person_id)
+
         if not G.contains_vertex(catalog['graph'], destination):
-            catalog['graph'] = G.insert_vertex(catalog['graph'], destination, al.new_list())
+            doms = al.new_list()
+            al.add_last(doms,person_id)
+            catalog['graph'] = G.insert_vertex(catalog['graph'], destination, doms)
+        else:
+            node_doms = G.get_vertex_information(catalog['graph'],destination)
+            al.add_last(node_doms,person_id)
 
         # Crear entrega
         delivery = {
